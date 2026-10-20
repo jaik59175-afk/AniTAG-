@@ -98,7 +98,19 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Light Theme Contrast Adjustments (Fixed for buttons, volume pill, and cards) */
+    /* Light Theme Contrast Adjustments (Fixed for Hero Banner, Player, Cards, Buttons & Modals) */
+    html.light-theme {
+      --bg-canvas: #f3f2ec;
+      --bg-header: rgba(243, 242, 236, 0.92);
+      --bg-surface: #ffffff;
+      --bg-elevated: #e6e4dc;
+      --bg-glass: rgba(255, 255, 255, 0.92);
+      --bg-pill: rgba(228, 226, 218, 0.95);
+      --text-main: #121216;
+      --text-muted: #52525b;
+      --border-subtle: rgba(18, 18, 22, 0.14);
+      --border-hover: rgba(18, 18, 22, 0.32);
+    }
     html.light-theme .text-white {
       color: #121216 !important;
     }
@@ -111,13 +123,47 @@
     html.light-theme .text-neutral-500 {
       color: #52525b !important;
     }
-    /* Keep all player overlay text crisp white even in Light Theme */
-    html.light-theme #videoPlayerContainer .text-white {
+    /* Keep all dark-surface containers (Hero Banner, Video Player, Card Poster Badges, Player Settings) crisp white in Light Theme */
+    html.light-theme .dark-surface,
+    html.light-theme .dark-surface .text-white,
+    html.light-theme #videoPlayerContainer .text-white,
+    html.light-theme #playerSettingsPopover .text-white,
+    html.light-theme #heroBannerSection .text-white {
       color: #ffffff !important;
     }
+    html.light-theme .dark-surface .text-neutral-100,
+    html.light-theme .dark-surface .text-neutral-200,
+    html.light-theme .dark-surface .text-neutral-300,
     html.light-theme #videoPlayerContainer .text-neutral-200,
-    html.light-theme #videoPlayerContainer .text-neutral-300 {
-      color: #d4d4d8 !important;
+    html.light-theme #videoPlayerContainer .text-neutral-300,
+    html.light-theme #playerSettingsPopover .text-neutral-300,
+    html.light-theme #heroBannerSection .text-neutral-200,
+    html.light-theme #heroBannerSection .text-neutral-300 {
+      color: #e4e4e7 !important;
+    }
+    html.light-theme .dark-surface .text-neutral-400,
+    html.light-theme #videoPlayerContainer .text-neutral-400,
+    html.light-theme #playerSettingsPopover .text-neutral-400,
+    html.light-theme #heroBannerSection .text-neutral-400 {
+      color: #a1a1aa !important;
+    }
+    /* Keep Play & Accent buttons inside dark surfaces bright high-contrast in Light Theme */
+    html.light-theme #heroBannerSection .accent-fill,
+    html.light-theme #heroBannerSection .accent-fill span,
+    html.light-theme #heroBannerSection .accent-fill svg,
+    html.light-theme #videoPlayerContainer .accent-fill,
+    html.light-theme #videoPlayerContainer .accent-fill span,
+    html.light-theme #videoPlayerContainer .accent-fill svg,
+    html.light-theme #playerSettingsPopover .accent-fill,
+    html.light-theme #playerSettingsPopover .accent-fill span {
+      background-color: var(--vol-fill-color, #ffffff) !important;
+      color: var(--vol-text-color, #0b0b0e) !important;
+    }
+    html.light-theme #heroBannerSection .accent-fill span,
+    html.light-theme #heroBannerSection .accent-fill svg,
+    html.light-theme #videoPlayerContainer .accent-fill span,
+    html.light-theme #videoPlayerContainer .accent-fill svg {
+      background-color: transparent !important;
     }
 
     /* Ensure .accent-fill and ALL its child spans/SVGs always use --accent-text in both Dark and Light themes */
@@ -749,30 +795,38 @@
         >
           <video
             id="nativeVideoElement"
-            class="w-full h-full object-cover transition-all duration-300"
+            class="w-full h-full object-contain bg-black transition-all duration-300"
             style="filter: brightness(var(--vid-brightness)) contrast(var(--vid-contrast));"
-            crossorigin="anonymous"
             playsinline
-            loop
-            poster="https://s4.anilist.co/file/anilistcdn/media/anime/banner/97940-134572-7be8.jpg"
-          >
-            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4" />
-          </video>
+            preload="auto"
+          ></video>
 
-          <!-- Real-Time Animated Anime Stream Visualizer Canvas (Guarantees smooth visual playback even offline/local) -->
+          <!-- Hidden fallback canvas (never blocks video stream) -->
           <canvas
             id="animeStreamVisualizerCanvas"
             width="960"
             height="540"
-            class="pointer-events-none absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+            class="hidden pointer-events-none absolute inset-0 w-full h-full object-cover opacity-0"
           ></canvas>
 
           <img
             id="playerBackdropPoster"
-            src="https://s4.anilist.co/file/anilistcdn/media/anime/banner/97940-134572-7be8.jpg"
+            src=""
             alt="Episode Scene"
-            class="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-25 transition-opacity duration-500"
+            class="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500"
           />
+
+          <!-- Buffering Spinner Overlay -->
+          <div id="videoBufferingOverlay" class="hidden pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px]">
+            <div class="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+            <span id="streamStatusSubtext" class="mt-2 text-[11px] font-semibold text-white px-2.5 py-0.5 rounded-full bg-black/70">Loading HD Anime Stream...</span>
+          </div>
+
+          <!-- 1-Tap Unmute Pill (shown only if mobile browser auto-starts muted) -->
+          <button id="mobileAutoUnmuteBtn" class="hidden absolute top-11 left-3 sm:left-5 z-30 px-3 py-1 rounded-full accent-fill text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <span>Tap to Unmute Audio</span>
+          </button>
           <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/50"></div>
 
           <!-- Left-Side Vertical Thumb Drag & Scroll Volume Gesture Zone (Left 45% of Player) -->
@@ -916,6 +970,16 @@
               </div>
 
               <div class="flex items-center justify-between pt-1">
+                <span class="text-neutral-300 font-medium">Captions (CC)</span>
+                <div class="flex items-center gap-2">
+                  <span id="psetCcStatusLabel" class="text-[10px] font-bold px-2 py-0.5 rounded-full accent-fill">ON</span>
+                  <div id="psetSpeedCcToggle" class="minimal-switch on" role="switch" aria-checked="true" title="Toggle Captions On/Off">
+                    <div class="minimal-switch-dot"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
                 <span class="text-neutral-300 font-medium">Auto-Skip Intro</span>
                 <div id="autoSkipToggle" class="minimal-switch on" role="switch" aria-checked="true">
                   <div class="minimal-switch-dot"></div>
@@ -925,6 +989,13 @@
 
             <!-- Tab 2: Subtitles -->
             <div id="psetPanel-subs" class="hidden space-y-2.5 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                <span class="text-neutral-200 font-semibold">Captions (CC)</span>
+                <div class="flex items-center bg-white/10 rounded-full p-0.5 text-[11px]">
+                  <button id="subsTabCcOnBtn" class="px-2.5 py-0.5 rounded-full font-bold accent-fill transition-all">ON</button>
+                  <button id="subsTabCcOffBtn" class="px-2.5 py-0.5 rounded-full font-medium text-neutral-300 hover:text-white transition-all">OFF</button>
+                </div>
+              </div>
               <div>
                 <div class="flex justify-between text-neutral-300 font-medium mb-1">
                   <span>Text Size</span>
@@ -1070,14 +1141,15 @@
                   </svg>
                 </button>
 
-                <!-- Subtitles / Captions Icon (Linear) -->
-                <button id="toggleCcBtn" class="text-white hover:text-neutral-300 active:scale-90 transition-all focus:outline-none" title="Toggle Subtitles (C)">
-                  <svg id="ccActiveSvg" class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    <line x1="7" y1="10" x2="17" y2="10"/>
-                    <line x1="7" y1="14" x2="13" y2="14"/>
-                    <line id="ccSlashLine" x1="3" y1="3" x2="21" y2="21" class="hidden" stroke-width="2.2"/>
+                <!-- Subtitles / Captions CC On/Off Pill Button -->
+                <button id="toggleCcBtn" class="px-2 py-0.5 rounded-md accent-fill font-extrabold text-[10px] sm:text-[11px] flex items-center gap-1 active:scale-90 transition-all focus:outline-none" title="Toggle Captions ON / OFF (C)">
+                  <svg id="ccActiveSvg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="6" y1="11" x2="14" y2="11"/>
+                    <line x1="6" y1="15" x2="18" y2="15"/>
+                    <line id="ccSlashLine" x1="3" y1="3" x2="21" y2="21" class="hidden" stroke-width="2.4"/>
                   </svg>
+                  <span id="dockCcStateText">CC ON</span>
                 </button>
 
                 <!-- Settings Gear Icon (Linear) -->
@@ -1258,6 +1330,12 @@
                 </button>
               </div>
 
+              <!-- Captions (CC) On / Off Quick Pill -->
+              <button id="watchBarCcToggleBtn" class="px-3 py-1.5 rounded-full accent-fill text-xs font-bold flex items-center gap-1.5 transition-all" title="Toggle Captions (CC) On or Off">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="15" x2="18" y2="15"/></svg>
+                <span id="watchBarCcText">CC: ON</span>
+              </button>
+
               <!-- Server Selector Pill (Koto / Miruro — Linear Server Icon) -->
               <div class="flex items-center kage-pill rounded-full p-0.5 text-xs">
                 <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5">
@@ -1272,14 +1350,55 @@
           </div>
         </div>
 
-        <!-- DESCRIPTION & METADATA CARD -->
-        <div class="kage-card rounded-2xl p-4 space-y-2">
-          <div class="text-xs font-medium text-neutral-400">
-            18.4K views • Streamed in 1080p HD • #1 most popular
+        <!-- COMPLETE ANIME DETAILS & METADATA CARD -->
+        <div class="kage-card rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row gap-4 items-start">
+            <img id="watchDetailsPoster" src="https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97940-fyh8o7gNbha0.png" alt="" class="w-24 h-36 rounded-xl object-cover border border-white/10 shrink-0 shadow-md" />
+            <div class="flex-1 min-w-0 space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="watchDetailFormatBadge" class="px-2.5 py-0.5 rounded-full kage-pill text-[11px] font-bold text-white">TV • 2017</span>
+                <span id="watchDetailStatusBadge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">Completed</span>
+                <span id="watchDetailScoreBadge" class="px-2.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 text-[11px] font-bold tabular-nums">★ 7.9</span>
+                <span id="watchDetailStudioBadge" class="px-2.5 py-0.5 rounded-full kage-pill text-[11px] font-medium text-neutral-300">Studio Pierrot</span>
+              </div>
+              <div>
+                <h2 id="watchDetailFullTitle" class="font-bold text-base sm:text-lg text-white">Black Clover</h2>
+                <div id="watchDetailNativeTitle" class="text-xs text-neutral-400">ブラッククローバー</div>
+              </div>
+              <p id="watchSynopsisText" class="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+                In a world where magic is everything, Asta and Yuno are both found abandoned at a church on the same day. While Yuno is gifted with exceptional magical powers, Asta is the only one in this world without any. At the age of fifteen, both receive grimoires, magic books that amplify their holder's magic.
+              </p>
+              <div id="watchDetailGenresRow" class="flex flex-wrap gap-1.5 pt-1"></div>
+            </div>
           </div>
-          <p id="watchSynopsisText" class="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-            In a world where magic is everything, Asta and Yuno are both found abandoned at a church on the same day. While Yuno is gifted with exceptional magical powers, Asta is the only one in this world without any.
-          </p>
+
+          <!-- 6-Item Full Details Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-3 border-t" style="border-color: var(--border-subtle);">
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Episodes</div>
+              <div id="watchMetaEpisodes" class="text-xs font-bold text-white mt-0.5 tabular-nums">170 Sub / 170 Dub</div>
+            </div>
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Duration</div>
+              <div id="watchMetaDuration" class="text-xs font-bold text-white mt-0.5 tabular-nums">24 min / ep</div>
+            </div>
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Studio</div>
+              <div id="watchMetaStudio" class="text-xs font-bold text-white mt-0.5 truncate">Studio Pierrot</div>
+            </div>
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Schedule</div>
+              <div id="watchMetaSchedule" class="text-xs font-bold text-white mt-0.5 tabular-nums">Tue • 18:25 IST</div>
+            </div>
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Captions (CC)</div>
+              <div id="watchMetaCcStatus" class="text-xs font-bold text-white mt-0.5">English / JP (ON)</div>
+            </div>
+            <div class="kage-pill rounded-xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-neutral-400">Quality & Audio</div>
+              <div id="watchMetaQuality" class="text-xs font-bold text-white mt-0.5">1080p HD • SUB</div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1318,8 +1437,8 @@
     <div id="view-home" class="space-y-10 blur-enter">
 
       <!-- HERO BANNER CONTAINER -->
-      <section class="max-w-[1480px] mx-auto px-3 sm:px-8 pt-3">
-        <div class="relative w-full min-h-[390px] lg:min-h-[470px] rounded-[24px] overflow-hidden border border-white/[0.08] flex items-end bg-[#0f0f13]">
+      <section id="heroBannerSection" class="max-w-[1480px] mx-auto px-3 sm:px-8 pt-3">
+        <div class="dark-surface relative w-full min-h-[390px] lg:min-h-[470px] rounded-[24px] overflow-hidden border border-white/[0.12] flex items-end bg-[#0f0f13]">
           <div id="heroVisualBg" class="absolute inset-0 z-0 hero-fade">
             <img id="heroBannerImg" src="https://s4.anilist.co/file/anilistcdn/media/anime/banner/97940-134572-7be8.jpg" alt="Featured Anime" class="w-full h-full object-cover object-center opacity-55" />
             <div class="absolute inset-0 bg-gradient-to-t from-[#0b0b0e] via-[#0b0b0e]/65 to-transparent"></div>
@@ -1353,9 +1472,10 @@
                 <span class="text-neutral-300" id="heroTotalCount">170 eps</span>
               </div>
 
-              <p id="heroSynopsis" class="text-xs sm:text-sm text-neutral-200 line-clamp-3 leading-relaxed max-w-xl" style="color: #e5e7eb !important;">
+              <p id="heroSynopsis" class="text-xs sm:text-sm text-neutral-200 leading-relaxed max-w-xl" style="color: #e5e7eb !important;">
                 In a world where magic is everything, Asta and Yuno are both found abandoned at a church on the same day. While Yuno is gifted with exceptional magical powers, Asta is the only one in this world without any.
               </p>
+              <div id="heroGenresRow" class="flex flex-wrap items-center gap-1.5 pt-0.5"></div>
 
               <!-- Action Button Row -->
               <div class="pt-1 flex flex-wrap items-center gap-2.5">
@@ -1551,10 +1671,10 @@
   <!-- ===================================================================== -->
   <div id="animeDetailsModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4">
     <div class="kage-glass rounded-3xl max-w-2xl w-full overflow-hidden border border-white/15 shadow-2xl blur-enter">
-      <div class="relative h-48 bg-black">
-        <img id="modalBannerImg" src="" alt="" class="w-full h-full object-cover opacity-50" />
-        <div class="absolute inset-0 bg-gradient-to-t from-[#141418] via-[#141418]/40 to-transparent"></div>
-        <button id="closeDetailsModalBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center">
+      <div class="dark-surface relative h-48 bg-black">
+        <img id="modalBannerImg" src="" alt="" class="w-full h-full object-cover opacity-65" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+        <button id="closeDetailsModalBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -2143,13 +2263,48 @@
       { start: 1289, end: 1432, title: 'Ending & Preview' }
     ];
 
-    const SUBTITLE_SCRIPT = [
-      { t: 0, en: '"I\'ll surpass my limits right here, right now!"', jp: '「今ここで、限界を超える！」' },
-      { t: 90, en: '[Opening Theme Playing]', jp: '[オープニングテーマ]' },
-      { t: 180, en: '"In a world where magic is everything..."', jp: '「魔力がすべての世界で…」' },
-      { t: 540, en: '"Within the fifth leaf resides a devil..."', jp: '「五つ目の葉には悪魔が棲む…」' },
-      { t: 920, en: '"Not giving up is my magic!"', jp: '「諦めないのが俺の魔法だ！」' }
-    ];
+    const ANIME_META_EXTRAS = {
+      'black-clover': { anilistId: 97940, studio: 'Studio Pierrot', duration: '24 min / ep', season: 'Fall 2017', palette: ['#c1442e', '#1e1b2e'] },
+      'bumpkin-swordsman-2': { anilistId: 179955, studio: 'Passione × Hayabusa Film', duration: '24 min / ep', season: 'Spring 2025', palette: ['#d97706', '#1c1917'] },
+      'bleach-tybw': { anilistId: 159322, studio: 'PIERROT FILMS', duration: '24 min / ep', season: 'Fall 2024', palette: ['#dc2626', '#0f172a'] },
+      'apothecary-diaries-s3': { anilistId: 161645, studio: 'TOHO animation STUDIO × OLM', duration: '24 min / ep', season: 'Winter 2025', palette: ['#10b981', '#064e3b'] },
+      'mushoku-tensei-s3': { anilistId: 146065, studio: 'Studio Bind', duration: '24 min / ep', season: 'Spring 2024', palette: ['#eab308', '#312e81'] },
+      'one-piece': { anilistId: 21, studio: 'Toei Animation', duration: '24 min / ep', season: 'Fall 1999', palette: ['#f59e0b', '#1e3a8a'] },
+      're-zero-s4': { anilistId: 163134, studio: 'WHITE FOX', duration: '25 min / ep', season: 'Fall 2024', palette: ['#8b5cf6', '#1e1b4b'] },
+      'slime-s4': { anilistId: 156822, studio: '8bit', duration: '24 min / ep', season: 'Spring 2024', palette: ['#38bdf8', '#0c4a6e'] },
+      'blue-box-s2': { anilistId: 170942, studio: 'Telecom Animation Film', duration: '24 min / ep', season: 'Fall 2024', palette: ['#60a5fa', '#172554'] },
+      'overgeared': { anilistId: 151807, studio: 'A-1 Pictures', duration: '24 min / ep', season: 'Winter 2024', palette: ['#6366f1', '#090d16'] },
+      'smoking-supermarket': { anilistId: 162804, studio: 'Asahi Production', duration: '24 min / ep', season: 'Summer 2026', palette: ['#ec4899', '#1f122b'] },
+      'inept-villainess': { anilistId: 166216, studio: 'Doga Kobo', duration: '24 min / ep', season: 'Spring 2026', palette: ['#f43f5e', '#2e1065'] }
+    };
+
+    const ANIME_SUBTITLE_SCRIPTS = {
+      'black-clover': [
+        { t: 0, en: '"I\'ll surpass my limits right here, right now!"', jp: '「今ここで、限界を超える！」' },
+        { t: 8, en: '"In a world where magic is everything..."', jp: '「魔力がすべての世界で…」' },
+        { t: 18, en: '"Within the fifth leaf resides a devil..."', jp: '「五つ目の葉には悪魔が棲む…」' },
+        { t: 30, en: '"Not giving up is my magic!"', jp: '「諦めないのが俺の魔法だ！」' }
+      ],
+      'one-piece': [
+        { t: 0, en: '"Wealth, fame, power... Gold Roger achieved it all!"', jp: '「富、名声、力…ゴールド・ロジャーはすべてを手に入れた！」' },
+        { t: 8, en: '"Set sail across the New World toward Egghead Island!"', jp: '「新世界を越え、エッグヘッド島へ出航だ！」' },
+        { t: 18, en: '"Gear Fifth! This is my peak!"', jp: '「ギア5！これが俺の最高地点だ！」' },
+        { t: 30, en: '"I\'m going to be the King of the Pirates!"', jp: '「海賊王に、俺はなる！」' }
+      ],
+      'bleach-tybw': [
+        { t: 0, en: '"Protect the Soul Society, Ichigo Kurosaki!"', jp: '「尸魂界を護れ、黒崎一護！」' },
+        { t: 8, en: '"The Thousand-Year Blood War reaches the Royal Palace."', jp: '「千年血戦、霊王宮へ突入する。」' },
+        { t: 18, en: '"Bankai: Tensa Zangetsu!"', jp: '「卍解・天鎖斬月！」' },
+        { t: 30, en: '"The blade is me."', jp: '「斬月、お前が俺だ。」' }
+      ],
+      'apothecary-diaries-s3': [
+        { t: 0, en: '"Every poison has a mechanism, and every mystery has a clue."', jp: '「すべての毒には仕組みがあり、謎には手がかりがある。」' },
+        { t: 10, en: '"Lady Gyokuyou, please do not touch that medicinal herb!"', jp: '「玉葉様、その薬草には触れないでください！」' },
+        { t: 22, en: '"Master Jinshi has another palace riddle for me..."', jp: '「壬氏様がまた後宮の謎を持ってきた…」' }
+      ]
+    };
+
+    const SUBTITLE_SCRIPT = ANIME_SUBTITLE_SCRIPTS['black-clover'];
 
     const state = {
       lang: 'en',
@@ -2210,22 +2365,42 @@
       return state.lang === 'jp' ? (anime.titleJp || anime.titleEn) : anime.titleEn;
     }
 
+    function getAnimeExtras(anime) {
+      return (anime && ANIME_META_EXTRAS[anime.id]) || {
+        anilistId: 0,
+        studio: (anime && anime.studio) || 'MAPPA / Pierrot',
+        duration: (anime && anime.duration) || '24 min / ep',
+        season: `${(anime && anime.year) || 2026}`,
+        palette: ['#c1442e', '#17130f']
+      };
+    }
+
     function createPosterDataUri(anime, isBanner = false) {
       const w = isBanner ? 1200 : 400;
       const h = isBanner ? 500 : 580;
-      const cleanTitle = (anime.titleEn || 'ANIME').replace(/&/g, '&amp;').replace(/</g, '&lt;').slice(0, 28);
+      const extras = getAnimeExtras(anime);
+      const c1 = extras.palette[0] || '#c1442e';
+      const c2 = extras.palette[1] || '#17130f';
+      const cleanTitle = (anime.titleEn || 'ANIME').replace(/&/g, '&amp;').replace(/</g, '&lt;').slice(0, 26);
+      const cleanJp = (anime.titleJp || 'AniTAG Official').replace(/&/g, '&amp;').replace(/</g, '&lt;').slice(0, 20);
+      const studio = (extras.studio || 'AniTAG Studio').replace(/&/g, '&amp;');
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
         <defs>
           <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#1f2028"/>
-            <stop offset="50%" stop-color="#14151a"/>
+            <stop offset="0%" stop-color="${c1}"/>
+            <stop offset="55%" stop-color="${c2}"/>
             <stop offset="100%" stop-color="#0b0b0e"/>
           </linearGradient>
         </defs>
         <rect width="${w}" height="${h}" fill="url(#g)"/>
-        <circle cx="${w * 0.78}" cy="${h * 0.25}" r="${h * 0.3}" fill="rgba(255,255,255,0.04)"/>
-        <text x="26" y="${h - 46}" fill="#ffffff" font-family="Outfit, sans-serif" font-weight="800" font-size="${isBanner ? 34 : 20}">${cleanTitle}</text>
-        <text x="26" y="${h - 22}" fill="rgba(255,255,255,0.45)" font-family="Outfit, sans-serif" font-weight="600" font-size="11">AniTAG • HD</text>
+        <circle cx="${w * 0.76}" cy="${h * 0.28}" r="${h * 0.34}" fill="rgba(255,255,255,0.10)"/>
+        <circle cx="${w * 0.25}" cy="${h * 0.18}" r="${h * 0.16}" fill="rgba(232,195,106,0.14)"/>
+        <ellipse cx="${w * 0.5}" cy="${h * 0.42}" rx="68" ry="18" fill="#E8C36A" stroke="#17130F" stroke-width="3.5"/>
+        <path d="M${w * 0.5 - 40} ${h * 0.40} C${w * 0.5 - 40} ${h * 0.28} ${w * 0.5 + 40} ${h * 0.28} ${w * 0.5 + 40} ${h * 0.40} Z" fill="#E8C36A" stroke="#17130F" stroke-width="3.5"/>
+        <rect x="${w * 0.5 - 38}" y="${h * 0.37}" width="76" height="8" rx="4" fill="#C1442E"/>
+        <text x="24" y="${h - 94}" fill="rgba(255,255,255,0.75)" font-family="Outfit, sans-serif" font-weight="600" font-size="12">${cleanJp}</text>
+        <text x="24" y="${h - 64}" fill="#ffffff" font-family="Outfit, sans-serif" font-weight="800" font-size="${isBanner ? 34 : 21}">${cleanTitle}</text>
+        <text x="24" y="${h - 38}" fill="rgba(232,195,106,0.95)" font-family="Outfit, sans-serif" font-weight="700" font-size="11">${studio} • HD 1080p</text>
       </svg>`;
       return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
     }
@@ -2418,13 +2593,22 @@
       thumb.src = getPosterUrl(anime);
       thumb.onerror = () => { thumb.src = createPosterDataUri(anime, false); };
 
-      document.getElementById('heroFormatYear').textContent = `${anime.format} • ${anime.year}`;
+      const extras = getAnimeExtras(anime);
+      document.getElementById('heroFormatYear').textContent = `${anime.format} • ${anime.year} • ${extras.studio}`;
       document.getElementById('heroScore').textContent = anime.score.toFixed(1);
       document.getElementById('heroSubCount').textContent = anime.sub;
       document.getElementById('heroDubCount').textContent = anime.dub;
       document.getElementById('heroTotalCount').textContent = `${anime.total} eps`;
       document.getElementById('heroTitle').textContent = getTitle(anime);
       document.getElementById('heroSynopsis').textContent = anime.synopsis;
+
+      const heroGenresEl = document.getElementById('heroGenresRow');
+      if (heroGenresEl) {
+        heroGenresEl.innerHTML = [
+          `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] font-bold">${anime.status}</span>`,
+          ...anime.genres.map(g => `<span class="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-white text-[10px] font-medium">${g}</span>`)
+        ].join('');
+      }
 
       const dotsEl = document.getElementById('heroDotsContainer');
       dotsEl.innerHTML = spotlights.map((item, idx) => `
@@ -2436,10 +2620,11 @@
       const poster = getPosterUrl(anime);
       const fallback = createPosterDataUri(anime, false);
       const isAiring = anime.status.toLowerCase().includes('airing');
+      const extras = getAnimeExtras(anime);
 
       return `
-        <div class="group flex flex-col gap-2 cursor-pointer" data-anime-card="${anime.id}">
-          <div class="kage-card relative aspect-[2/2.85] w-full rounded-2xl overflow-hidden bg-[#121216]">
+        <div class="group flex flex-col gap-1.5 cursor-pointer" data-anime-card="${anime.id}">
+          <div class="kage-card dark-surface relative aspect-[2/2.85] w-full rounded-2xl overflow-hidden bg-[#121216]">
             <img
               src="${poster}"
               onerror="this.onerror=null;this.src='${fallback}';"
@@ -2447,21 +2632,26 @@
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/25"></div>
 
             <!-- Rating Pill with Linear Star Icon -->
-            <div class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md border border-white/10 text-[11px] font-bold text-yellow-400 tabular-nums flex items-center gap-1">
+            <div class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-bold text-yellow-400 tabular-nums flex items-center gap-1">
               ${LINEAR_ICONS.star}
               <span>${anime.score.toFixed(1)}</span>
             </div>
 
+            <!-- Format & Year Badge Top-Right -->
+            <div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md border border-white/15 text-[10px] font-semibold text-white tabular-nums">
+              ${anime.format} • ${anime.year}
+            </div>
+
             <!-- Episode Pill Overlay with Linear CC / Mic Icons -->
             <div class="absolute bottom-2.5 inset-x-2.5 flex items-center justify-center">
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white tabular-nums" style="color:#ffffff !important;">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 backdrop-blur-md border border-white/15 text-[10px] font-bold text-white tabular-nums">
                 <span class="flex items-center gap-1" title="Subbed">${LINEAR_ICONS.cc}<span>${anime.sub}</span></span>
                 ${anime.dub > 0 ? `<span class="text-white/25">•</span><span class="flex items-center gap-1" title="Dubbed">${LINEAR_ICONS.mic}<span>${anime.dub}</span></span>` : ''}
                 <span class="text-white/25">•</span>
-                <span class="text-neutral-300">${anime.total}</span>
+                <span class="text-neutral-300">${anime.total} ep</span>
               </div>
             </div>
 
@@ -2473,11 +2663,17 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5 px-0.5">
-            ${isAiring ? `<span class="w-2 h-2 rounded-full bg-[#22c55e] shrink-0" title="Currently Airing"></span>` : ''}
-            <h3 class="font-medium text-xs sm:text-sm text-neutral-100 group-hover:text-white truncate">
-              ${getTitle(anime)}
-            </h3>
+          <div class="px-0.5 space-y-0.5">
+            <div class="flex items-center gap-1.5">
+              ${isAiring ? `<span class="w-2 h-2 rounded-full bg-[#22c55e] shrink-0" title="Currently Airing"></span>` : ''}
+              <h3 class="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white truncate">
+                ${getTitle(anime)}
+              </h3>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-neutral-400 truncate">
+              <span class="truncate">${anime.genres.slice(0, 2).join(' • ')}</span>
+              <span class="shrink-0 font-medium">${extras.studio.split(' ')[0]}</span>
+            </div>
           </div>
         </div>
       `;
@@ -2733,13 +2929,82 @@
       return CHAPTERS.find(c => sec >= c.start && sec < c.end) || CHAPTERS[2];
     }
 
+    function setCaptionsEnabled(enabled, silent = false) {
+      state.ccEnabled = Boolean(enabled);
+      const subEl = document.getElementById('playerSubtitleContainer');
+      if (subEl) subEl.style.display = state.ccEnabled ? 'block' : 'none';
+
+      // 1. Bottom Dock CC Button
+      const slash = document.getElementById('ccSlashLine');
+      if (slash) slash.classList.toggle('hidden', state.ccEnabled);
+      const dockCcBtn = document.getElementById('toggleCcBtn');
+      const dockCcText = document.getElementById('dockCcStateText');
+      if (dockCcText) dockCcText.textContent = state.ccEnabled ? 'CC ON' : 'CC OFF';
+      if (dockCcBtn) {
+        dockCcBtn.className = state.ccEnabled
+          ? 'px-2 py-0.5 rounded-md accent-fill font-extrabold text-[10px] sm:text-[11px] flex items-center gap-1 active:scale-90 transition-all focus:outline-none'
+          : 'px-2 py-0.5 rounded-md bg-white/10 text-neutral-300 border border-white/15 font-bold text-[10px] sm:text-[11px] flex items-center gap-1 active:scale-90 transition-all focus:outline-none';
+      }
+
+      // 2. Watch Action Bar CC Button
+      const watchCcBtn = document.getElementById('watchBarCcToggleBtn');
+      const watchCcText = document.getElementById('watchBarCcText');
+      if (watchCcText) watchCcText.textContent = state.ccEnabled ? 'CC: ON' : 'CC: OFF';
+      if (watchCcBtn) {
+        watchCcBtn.className = state.ccEnabled
+          ? 'px-3 py-1.5 rounded-full accent-fill text-xs font-bold flex items-center gap-1.5 transition-all'
+          : 'px-3 py-1.5 rounded-full kage-pill text-xs font-semibold text-neutral-400 hover:text-white flex items-center gap-1.5 transition-all';
+      }
+
+      // 3. Player Settings Popover -> Playback Tab CC Switch
+      const speedCcToggle = document.getElementById('psetSpeedCcToggle');
+      const speedCcLabel = document.getElementById('psetCcStatusLabel');
+      if (speedCcToggle) speedCcToggle.classList.toggle('on', state.ccEnabled);
+      if (speedCcLabel) {
+        speedCcLabel.textContent = state.ccEnabled ? 'ON' : 'OFF';
+        speedCcLabel.className = state.ccEnabled
+          ? 'text-[10px] font-bold px-2 py-0.5 rounded-full accent-fill'
+          : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-neutral-400';
+      }
+
+      // 4. Player Settings Popover -> Subtitles Tab ON / OFF Pill Buttons
+      const subOnBtn = document.getElementById('subsTabCcOnBtn');
+      const subOffBtn = document.getElementById('subsTabCcOffBtn');
+      if (subOnBtn && subOffBtn) {
+        subOnBtn.className = state.ccEnabled
+          ? 'px-2.5 py-0.5 rounded-full font-bold accent-fill transition-all'
+          : 'px-2.5 py-0.5 rounded-full font-medium text-neutral-300 hover:text-white transition-all';
+        subOffBtn.className = !state.ccEnabled
+          ? 'px-2.5 py-0.5 rounded-full font-bold accent-fill transition-all'
+          : 'px-2.5 py-0.5 rounded-full font-medium text-neutral-300 hover:text-white transition-all';
+      }
+
+      // 5. Watch Details Metadata Grid CC Status
+      const metaCc = document.getElementById('watchMetaCcStatus');
+      if (metaCc) metaCc.textContent = state.ccEnabled ? 'English / JP (ON)' : 'Captions OFF';
+
+      if (!silent) {
+        showShortcutPill(state.ccEnabled ? 'Captions (CC): ON' : 'Captions (CC): OFF');
+        showToast(state.ccEnabled ? 'Captions (CC) Turned ON' : 'Captions (CC) Turned OFF');
+      }
+    }
+
     function updateSubtitleForTime(sec) {
       const subEl = document.getElementById('playerSubtitleContainer');
       if (!subEl) return;
       subEl.style.display = state.ccEnabled ? 'block' : 'none';
-      let activeLine = SUBTITLE_SCRIPT[0];
-      for (const item of SUBTITLE_SCRIPT) {
-        if (sec >= item.t) activeLine = item;
+      if (!state.ccEnabled) return;
+      const animeId = (state.activeAnime && state.activeAnime.id) || 'black-clover';
+      const script = ANIME_SUBTITLE_SCRIPTS[animeId] || [
+        { t: 0, en: `"${getTitle(state.activeAnime)} — Episode ${state.activeEpisode}"`, jp: `「${state.activeAnime.titleJp || getTitle(state.activeAnime)} 第${state.activeEpisode}話」` },
+        { t: 8, en: `"Wait... can you feel that overwhelming aura?!"`, jp: `「待て…この圧倒的な魔力を感じるか？！」` },
+        { t: 18, en: `"We won't back down, no matter who stands in our way!"`, jp: `「誰が立ちغだかろうと、俺たちは退かない！」` },
+        { t: 28, en: `"Let's finish this right here, right now!"`, jp: `「今ここで決着をつけるぞ！」` }
+      ];
+      const loopedSec = sec % 40;
+      let activeLine = script[0];
+      for (const item of script) {
+        if (loopedSec >= item.t) activeLine = item;
       }
       subEl.textContent = state.lang === 'jp' ? activeLine.jp : activeLine.en;
     }
@@ -2769,13 +3034,12 @@
 
     setInterval(() => {
       if (state.playerOpen && state.isPlaying) {
-        state.currentTime += 0.25 * state.playbackSpeed;
-        if (state.autoSkipIntro && state.currentTime >= 90 && state.currentTime < 91) {
-          state.currentTime = 180;
-          showToast('Skipped Intro');
+        // Only increment fallback clock if nativeVideo is not actively updating currentTime
+        if (!nativeVideo || nativeVideo.paused || nativeVideo.readyState < 2) {
+          state.currentTime += 0.25 * state.playbackSpeed;
+          if (state.currentTime >= state.duration) state.currentTime = 0;
+          updateTimelineUI();
         }
-        if (state.currentTime >= state.duration) state.currentTime = 0;
-        updateTimelineUI();
       }
     }, 250);
 
@@ -3133,56 +3397,198 @@
       document.getElementById('dockPlayIconSvg').classList.toggle('hidden', state.isPlaying);
     }
 
+    // Universal H.264 MP4 + WebM + HLS stream queue so playback NEVER fails on any mobile or desktop browser
+    const UNIVERSAL_FALLBACK_MP4S = [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+    ];
+
+    let activeStreamQueue = [];
+    let activeStreamIndex = 0;
+    let streamStallTimeout = null;
+    state.activeServer = 'Koto';
+
+    function setBufferingUI(isBuffering, statusText = 'Loading HD Anime Stream...') {
+      const overlay = document.getElementById('videoBufferingOverlay');
+      const sub = document.getElementById('streamStatusSubtext');
+      if (overlay) overlay.classList.toggle('hidden', !isBuffering);
+      if (sub && statusText) sub.textContent = statusText;
+    }
+
+    function safeStartVideoPlayback() {
+      if (!nativeVideo) return;
+      nativeVideo.playbackRate = state.playbackSpeed;
+      nativeVideo.volume = state.isMuted ? 0 : (state.volume / 100);
+      const unmuteBtn = document.getElementById('mobileAutoUnmuteBtn');
+
+      const playPromise = nativeVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          state.isPlaying = true;
+          syncPlayPauseIcons();
+          setBufferingUI(false);
+          if (unmuteBtn) unmuteBtn.classList.toggle('hidden', !nativeVideo.muted);
+        }).catch(() => {
+          // Mobile browser blocked unmuted autoplay -> immediately play muted with 1-tap unmute button
+          nativeVideo.muted = true;
+          nativeVideo.play().then(() => {
+            state.isPlaying = true;
+            syncPlayPauseIcons();
+            setBufferingUI(false);
+            if (unmuteBtn) unmuteBtn.classList.remove('hidden');
+          }).catch(() => {
+            setBufferingUI(false);
+          });
+        });
+      }
+    }
+
     function attachSourceAndPlay(streamUrl, isHls = false) {
+      clearTimeout(streamStallTimeout);
+      setBufferingUI(true, 'Connecting to HD Stream...');
       if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
       }
+      if (streamCanvas) streamCanvas.style.opacity = '0';
+      if (backdropPosterImg) backdropPosterImg.style.opacity = '0';
+
       if (isHls && window.Hls && Hls.isSupported()) {
         hlsInstance = new Hls({ enableWorker: true });
         hlsInstance.loadSource(streamUrl);
         hlsInstance.attachMedia(nativeVideo);
         hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-          nativeVideo.play().catch(() => {});
+          safeStartVideoPlayback();
+        });
+        hlsInstance.on(Hls.Events.ERROR, (ev, data) => {
+          if (data && data.fatal) {
+            tryNextStreamInQueue();
+          }
         });
       } else {
-        if (nativeVideo.src !== streamUrl) {
-          nativeVideo.src = streamUrl;
-        }
-        nativeVideo.play().catch(() => {});
+        nativeVideo.src = streamUrl;
+        nativeVideo.load();
+        safeStartVideoPlayback();
       }
+
+      // If stream does not start decoding within 4.5s, auto-switch to next stream in queue
+      streamStallTimeout = setTimeout(() => {
+        if (state.playerOpen && nativeVideo.readyState < 2) {
+          tryNextStreamInQueue();
+        }
+      }, 4500);
+    }
+
+    function tryNextStreamInQueue() {
+      clearTimeout(streamStallTimeout);
+      activeStreamIndex++;
+      if (activeStreamIndex < activeStreamQueue.length) {
+        const nextUrl = activeStreamQueue[activeStreamIndex];
+        setBufferingUI(true, `Switching to Backup Stream #${activeStreamIndex + 1}...`);
+        attachSourceAndPlay(nextUrl, nextUrl.includes('.m3u8'));
+      } else {
+        setBufferingUI(false);
+      }
+    }
+
+    function buildStreamQueueForAnime(anime, episodeNum) {
+      const animeIdx = Math.max(0, ANIME_CATALOG.indexOf(anime));
+      const directWebm = ANIME_DIRECT_STREAMS[anime.id] || 'https://v.animethemes.moe/BlackClover-OP3.webm';
+      const proxiedWebm = location.protocol.startsWith('http')
+        ? `/api/proxy?url=${encodeURIComponent(directWebm)}`
+        : directWebm;
+      const mp4Primary = UNIVERSAL_FALLBACK_MP4S[(animeIdx + episodeNum) % UNIVERSAL_FALLBACK_MP4S.length];
+      const mp4Secondary = UNIVERSAL_FALLBACK_MP4S[(animeIdx + episodeNum + 1) % UNIVERSAL_FALLBACK_MP4S.length];
+
+      if (state.activeServer === 'Miruro') {
+        return [mp4Primary, directWebm, proxiedWebm, mp4Secondary];
+      }
+      return [directWebm, proxiedWebm, mp4Primary, mp4Secondary];
     }
 
     async function loadBuiltInEpisodeStream(anime, episodeNum) {
       nativeVideo.poster = getBannerUrl(anime);
-      nativeVideo.playbackRate = state.playbackSpeed;
-      nativeVideo.volume = state.isMuted ? 0 : (state.volume / 100);
       state.isPlaying = true;
-      backdropPosterImg.style.opacity = '0.18';
       syncPlayPauseIcons();
 
-      // 1. Try Full-Stack Backend API (/api/stream) if deployed on Render/Vercel
-      if (location.protocol.startsWith('http')) {
+      // 1. Immediately start synchronous playback from our stream queue so mobile browsers grant user-gesture play!
+      activeStreamQueue = buildStreamQueueForAnime(anime, episodeNum);
+      activeStreamIndex = 0;
+      attachSourceAndPlay(activeStreamQueue[0], activeStreamQueue[0].includes('.m3u8'));
+
+      // 2. Also query backend /api/stream in background; if it resolves a dedicated provider stream, prepend/switch if current hasn't started
+      if (location.protocol.startsWith('http') && state.activeServer === 'Koto') {
         try {
           const resp = await fetch(`/api/stream?animeId=${encodeURIComponent(anime.id)}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${state.audioMode.toLowerCase()}`);
           if (resp.ok) {
             const data = await resp.json();
-            if (data && data.url) {
-              attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
-              return;
+            if (data && data.url && !activeStreamQueue.includes(data.url)) {
+              activeStreamQueue.splice(1, 0, data.url);
+              if (data.provider === 'gogoanime' || nativeVideo.readyState < 2) {
+                attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
+              }
             }
           }
         } catch (e) {}
       }
-
-      // 2. Fallback to direct HD anime stream for this series + Live 60fps Anime Visualizer Canvas
-      const directAnimeUrl = ANIME_DIRECT_STREAMS[anime.id];
-      const idx = (ANIME_CATALOG.indexOf(anime) + episodeNum) % BUILTIN_HD_STREAMS.length;
-      const streamUrl = directAnimeUrl || BUILTIN_HD_STREAMS[Math.max(0, idx)];
-      attachSourceAndPlay(streamUrl, false);
     }
 
-    function openAnimeInPlayer(animeId, episodeNum = 1, startTimeSec = 13) {
+    function populateWatchPageDetails(anime, episodeNum) {
+      const extras = getAnimeExtras(anime);
+      document.getElementById('playerNowPlayingTitle').textContent = getTitle(anime);
+      document.getElementById('playerEpisodePill').textContent = `EP ${episodeNum} • ${state.audioMode}`;
+      document.getElementById('watchEpisodeHeading').textContent = `${getTitle(anime)} — Episode ${episodeNum}`;
+      document.getElementById('watchSeriesName').textContent = getTitle(anime);
+
+      const avatar = document.getElementById('watchSeriesAvatar');
+      if (avatar) {
+        avatar.src = getPosterUrl(anime);
+        avatar.onerror = () => { avatar.src = createPosterDataUri(anime, false); };
+      }
+
+      const detailsPoster = document.getElementById('watchDetailsPoster');
+      if (detailsPoster) {
+        detailsPoster.src = getPosterUrl(anime);
+        detailsPoster.onerror = () => { detailsPoster.src = createPosterDataUri(anime, false); };
+      }
+
+      const fmtBadge = document.getElementById('watchDetailFormatBadge');
+      if (fmtBadge) fmtBadge.textContent = `${anime.format} • ${anime.year}`;
+      const statusBadge = document.getElementById('watchDetailStatusBadge');
+      if (statusBadge) statusBadge.textContent = anime.status;
+      const scoreBadge = document.getElementById('watchDetailScoreBadge');
+      if (scoreBadge) scoreBadge.textContent = `★ ${anime.score.toFixed(1)}`;
+      const studioBadge = document.getElementById('watchDetailStudioBadge');
+      if (studioBadge) studioBadge.textContent = extras.studio;
+      const fullTitle = document.getElementById('watchDetailFullTitle');
+      if (fullTitle) fullTitle.textContent = anime.titleEn;
+      const nativeTitle = document.getElementById('watchDetailNativeTitle');
+      if (nativeTitle) nativeTitle.textContent = anime.titleJp || '';
+
+      document.getElementById('watchSynopsisText').textContent = anime.synopsis;
+
+      const genresRow = document.getElementById('watchDetailGenresRow');
+      if (genresRow) {
+        genresRow.innerHTML = anime.genres.map(g => `<span class="px-2.5 py-0.5 rounded-full kage-pill text-[11px] font-semibold text-white">${g}</span>`).join('');
+      }
+
+      const metaEps = document.getElementById('watchMetaEpisodes');
+      if (metaEps) metaEps.textContent = `${anime.sub} Sub / ${anime.dub} Dub (${anime.total} Total)`;
+      const metaDur = document.getElementById('watchMetaDuration');
+      if (metaDur) metaDur.textContent = extras.duration;
+      const metaStudio = document.getElementById('watchMetaStudio');
+      if (metaStudio) metaStudio.textContent = extras.studio;
+      const metaSched = document.getElementById('watchMetaSchedule');
+      if (metaSched) metaSched.textContent = `${anime.day} • ${anime.airTime} IST`;
+      const metaQual = document.getElementById('watchMetaQuality');
+      if (metaQual) metaQual.textContent = `${state.quality} HD • ${state.audioMode}`;
+
+      updateWatchlistBtnHtml(document.getElementById('watchAddToListBtn'), state.watchlist.has(anime.id));
+    }
+
+    function openAnimeInPlayer(animeId, episodeNum = 1, startTimeSec = 0) {
       const anime = ANIME_CATALOG.find(a => a.id === animeId) || ANIME_CATALOG[0];
       state.activeAnime = anime;
       state.activeEpisode = episodeNum;
@@ -3191,8 +3597,6 @@
       state.currentView = 'watch';
 
       previewImgCache.src = getBannerUrl(anime);
-      backdropPosterImg.src = getBannerUrl(anime);
-      loadBuiltInEpisodeStream(anime, episodeNum);
 
       ['home', 'browse', 'schedule', 'music', 'torrents', 'watchlist'].forEach(v => {
         const el = document.getElementById(`view-${v}`);
@@ -3205,13 +3609,9 @@
       void playerView.offsetWidth;
       playerView.classList.add('blur-enter');
 
-      document.getElementById('playerNowPlayingTitle').textContent = getTitle(anime);
-      document.getElementById('playerEpisodePill').textContent = `EP ${episodeNum} • ${state.audioMode}`;
-      document.getElementById('watchEpisodeHeading').textContent = `${getTitle(anime)} — Episode ${episodeNum}`;
-      document.getElementById('watchSeriesName').textContent = getTitle(anime);
-      document.getElementById('watchSeriesAvatar').src = getPosterUrl(anime);
-      document.getElementById('watchSynopsisText').textContent = anime.synopsis;
-      updateWatchlistBtnHtml(document.getElementById('watchAddToListBtn'), state.watchlist.has(anime.id));
+      populateWatchPageDetails(anime, episodeNum);
+      loadBuiltInEpisodeStream(anime, episodeNum);
+      setCaptionsEnabled(state.ccEnabled, true);
 
       updateNavActivePills('watch');
       renderPlayerEpisodes();
@@ -3372,10 +3772,8 @@
       } else if (key.toLowerCase() === 'm') {
         changeVolume(state.volume > 0 ? 0 : 60, true);
       } else if (key.toLowerCase() === 'c') {
-        state.ccEnabled = !state.ccEnabled;
-        document.getElementById('ccSlashLine').classList.toggle('hidden', state.ccEnabled);
+        setCaptionsEnabled(!state.ccEnabled);
         updateTimelineUI();
-        showShortcutPill(state.ccEnabled ? 'Subtitles: ON (C)' : 'Subtitles: OFF (C)');
       }
     }
 
@@ -3585,12 +3983,55 @@
     document.getElementById('playerPlayPauseBtn').addEventListener('click', togglePlayPause);
     document.getElementById('centerPlayPauseBtn').addEventListener('click', togglePlayPause);
     nativeVideo.addEventListener('click', togglePlayPause);
-    nativeVideo.addEventListener('error', () => {
-      if (nativeVideo.src && !nativeVideo.src.includes('BigBuckBunny.mp4')) {
-        nativeVideo.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-        if (state.isPlaying) nativeVideo.play().catch(() => {});
+    nativeVideo.addEventListener('waiting', () => {
+      if (state.playerOpen && state.isPlaying) setBufferingUI(true, 'Buffering HD Stream...');
+    });
+    nativeVideo.addEventListener('playing', () => {
+      clearTimeout(streamStallTimeout);
+      setBufferingUI(false);
+      state.isPlaying = true;
+      syncPlayPauseIcons();
+    });
+    nativeVideo.addEventListener('canplay', () => {
+      clearTimeout(streamStallTimeout);
+      setBufferingUI(false);
+    });
+    nativeVideo.addEventListener('loadedmetadata', () => {
+      if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration > 5) {
+        state.duration = Math.floor(nativeVideo.duration);
+        updateTimelineUI();
       }
     });
+    nativeVideo.addEventListener('timeupdate', () => {
+      if (!isScrubbing && !nativeVideo.paused && isFinite(nativeVideo.currentTime)) {
+        state.currentTime = nativeVideo.currentTime;
+        if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration > 5) {
+          state.duration = nativeVideo.duration;
+        }
+        updateTimelineUI();
+      }
+    });
+    nativeVideo.addEventListener('ended', () => {
+      nativeVideo.currentTime = 0;
+      nativeVideo.play().catch(() => {});
+    });
+    nativeVideo.addEventListener('error', () => {
+      tryNextStreamInQueue();
+    });
+
+    const mobileUnmuteBtn = document.getElementById('mobileAutoUnmuteBtn');
+    if (mobileUnmuteBtn) {
+      mobileUnmuteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nativeVideo.muted = false;
+        state.isMuted = false;
+        if (state.volume === 0) state.volume = 80;
+        nativeVideo.volume = state.volume / 100;
+        syncVolumeVisuals(state.volume);
+        mobileUnmuteBtn.classList.add('hidden');
+        showToast(`Audio Unmuted (${state.volume}%)`);
+      });
+    }
 
     document.getElementById('prevEpBtn').addEventListener('click', goPrevEpisode);
     document.getElementById('nextEpBtn').addEventListener('click', goNextEpisode);
@@ -4157,33 +4598,134 @@
       renderContinueWatching();
     });
 
+    // Wire up all Captions (CC) On / Off Controls
+    const watchBarCcBtn = document.getElementById('watchBarCcToggleBtn');
+    if (watchBarCcBtn) {
+      watchBarCcBtn.addEventListener('click', () => setCaptionsEnabled(!state.ccEnabled));
+    }
+    const psetSpeedCcToggle = document.getElementById('psetSpeedCcToggle');
+    if (psetSpeedCcToggle) {
+      psetSpeedCcToggle.addEventListener('click', () => setCaptionsEnabled(!state.ccEnabled));
+    }
+    const subsTabCcOnBtn = document.getElementById('subsTabCcOnBtn');
+    if (subsTabCcOnBtn) {
+      subsTabCcOnBtn.addEventListener('click', () => setCaptionsEnabled(true));
+    }
+    const subsTabCcOffBtn = document.getElementById('subsTabCcOffBtn');
+    if (subsTabCcOffBtn) {
+      subsTabCcOffBtn.addEventListener('click', () => setCaptionsEnabled(false));
+    }
+
     document.querySelectorAll('.server-pill-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        state.activeServer = btn.dataset.server || 'Koto';
         document.querySelectorAll('.server-pill-btn').forEach(b => {
           b.className = b === btn
             ? 'server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5'
             : 'server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5';
         });
-        showToast(`Server: ${btn.dataset.server}`);
+        if (state.playerOpen) {
+          loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
+        }
+        showToast(`Streaming Server: ${state.activeServer}`);
       });
     });
+
+    // Live AniList GraphQL Hydration for Official Posters, Banners & Full Details
+    async function hydrateCatalogFromAniList() {
+      try {
+        const ids = Object.values(ANIME_META_EXTRAS).map(x => x.anilistId).filter(Boolean);
+        const query = `query ($ids: [Int]) {
+          Page(page: 1, perPage: 25) {
+            media(id_in: $ids, type: ANIME) {
+              id
+              title { english romaji native }
+              seasonYear
+              format
+              averageScore
+              episodes
+              duration
+              status
+              genres
+               description(asHtml: false)
+              coverImage { extraLarge large }
+              bannerImage
+              studios(isMain: true) { nodes { name } }
+            }
+          }
+        }`;
+        const res = await fetch('https://graphql.anilist.co', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ query, variables: { ids } })
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const mediaList = (json && json.data && json.data.Page && json.data.Page.media) || [];
+        if (!mediaList.length) return;
+
+        ANIME_CATALOG.forEach(anime => {
+          const ext = ANIME_META_EXTRAS[anime.id];
+          if (!ext) return;
+          const match = mediaList.find(m => m.id === ext.anilistId);
+          if (!match) return;
+          if (match.coverImage && (match.coverImage.extraLarge || match.coverImage.large)) {
+            anime.cover = match.coverImage.extraLarge || match.coverImage.large;
+          }
+          if (match.bannerImage) {
+            anime.banner = match.bannerImage;
+          }
+          if (match.description) {
+            const cleanDesc = match.description.replace(/<[^>]*>/g, '').replace(/\(Source:.*\)/gi, '').trim();
+            if (cleanDesc.length > 40) anime.synopsis = cleanDesc;
+          }
+          if (match.averageScore) {
+            anime.score = Number((match.averageScore / 10).toFixed(1));
+          }
+          if (match.genres && match.genres.length) {
+            anime.genres = match.genres.slice(0, 4);
+          }
+          if (match.studios && match.studios.nodes && match.studios.nodes[0]) {
+            ext.studio = match.studios.nodes[0].name;
+          }
+          if (match.duration) {
+            ext.duration = `${match.duration} min / ep`;
+          }
+        });
+
+        renderAllCatalogViews();
+        if (state.playerOpen) {
+          populateWatchPageDetails(state.activeAnime, state.activeEpisode);
+          renderPlayerEpisodes();
+        }
+      } catch (e) {}
+    }
 
     // Details Modal
     const detailsModal = document.getElementById('animeDetailsModal');
     function openAnimeDetailsModal(anime) {
       state.modalAnime = anime;
-      document.getElementById('modalBannerImg').src = getBannerUrl(anime);
-      document.getElementById('modalPosterImg').src = getPosterUrl(anime);
-      document.getElementById('modalTitle').textContent = getTitle(anime);
+      const extras = getAnimeExtras(anime);
+      const bImg = document.getElementById('modalBannerImg');
+      bImg.src = getBannerUrl(anime);
+      bImg.onerror = () => { bImg.src = createPosterDataUri(anime, true); };
+      const pImg = document.getElementById('modalPosterImg');
+      pImg.src = getPosterUrl(anime);
+      pImg.onerror = () => { pImg.src = createPosterDataUri(anime, false); };
+
+      document.getElementById('modalTitle').textContent = `${getTitle(anime)} (${anime.titleJp || anime.year})`;
       document.getElementById('modalSynopsis').textContent = anime.synopsis;
       document.getElementById('modalBadgesRow').innerHTML = `
-        <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-semibold">${anime.format} • ${anime.year}</span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-white font-semibold">${anime.format} • ${anime.year}</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-bold">${anime.status}</span>
         <span class="px-2.5 py-0.5 rounded-full bg-yellow-400/15 text-yellow-500 font-bold flex items-center gap-1">${LINEAR_ICONS.star}<span>${anime.score}</span></span>
-        <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.cc}<span>${anime.sub}</span></span>
-        <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.mic}<span>${anime.dub}</span></span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.cc}<span>${anime.sub} Sub</span></span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.mic}<span>${anime.dub} Dub</span></span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-neutral-300 font-medium">${extras.studio}</span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-neutral-300 font-medium">${extras.duration}</span>
       `;
       document.getElementById('modalGenresRow').innerHTML = anime.genres.map(g => `
-        <span class="px-2.5 py-0.5 rounded-full kage-pill text-[11px] text-neutral-300">${g}</span>
+        <span class="px-2.5 py-0.5 rounded-full kage-pill text-[11px] font-semibold text-white">${g}</span>
       `).join('');
       const modalWlBtn = document.getElementById('modalToggleWatchlistBtn');
       modalWlBtn.className = 'px-4 py-2 rounded-full kage-pill text-xs font-semibold text-white flex items-center gap-1.5';
@@ -4310,11 +4852,13 @@
       initProgressiveWebApp();
       applyThemeAndMood();
       syncAudioBannerVisibility();
+      setCaptionsEnabled(state.ccEnabled, true);
       renderAllCatalogViews();
       renderPlayerEpisodes();
       updateTimelineUI();
       syncVolumeVisuals(state.volume);
       updateNavActivePills('home');
+      hydrateCatalogFromAniList();
     });
   </script>
 </body>

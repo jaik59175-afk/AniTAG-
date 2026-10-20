@@ -2,6 +2,7 @@
  * AniTAG — Bulletproof Full-Stack Anime Streaming Server
  * Works on BOTH Vercel Serverless Functions and Render Web Services
  * Supports files in repository root (./index.html) OR ./public/index.html
+ * Supports HTTP Range streaming, M3U8 playlist rewriting, and AniList GraphQL
  */
 const http = require('http');
 const fs = require('fs');
@@ -45,10 +46,9 @@ const DIRECT_ANIME_STREAMS = {
 };
 
 const FALLBACK_STREAMS = [
-  'https://v.animethemes.moe/BlackClover-OP3.webm',
-  'https://v.animethemes.moe/OnePiece-OP26.webm',
-  'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
-  'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm'
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
 ];
 
 function findDiskFile(names) {
@@ -80,7 +80,6 @@ async function handleRequest(req, res) {
     const parsedUrl = new URL(req.url || '/', 'http://' + (req.headers.host || 'localhost'));
     const pathname = parsedUrl.pathname;
 
-    // CORS preflight
     if (req.method === 'OPTIONS') {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
@@ -90,7 +89,6 @@ async function handleRequest(req, res) {
       return res.end();
     }
 
-    // 1. Favicon & App Icon (Never throw 500 ENOENT)
     if (pathname === '/favicon.ico' || pathname === '/icon.svg') {
       const iconPath = findDiskFile(['icon.svg']);
       const svgContent = iconPath ? fs.readFileSync(iconPath, 'utf8') : INLINE_ICON_SVG;
@@ -98,7 +96,6 @@ async function handleRequest(req, res) {
       return res.end(svgContent);
     }
 
-    // 2. PWA Manifest
     if (pathname === '/manifest.json') {
       const manifestPath = findDiskFile(['manifest.json']);
       const content = manifestPath ? fs.readFileSync(manifestPath, 'utf8') : INLINE_MANIFEST;
@@ -106,7 +103,6 @@ async function handleRequest(req, res) {
       return res.end(content);
     }
 
-    // 3. Service Worker
     if (pathname === '/sw.js') {
       const swPath = findDiskFile(['sw.js']);
       const content = swPath ? fs.readFileSync(swPath, 'utf8') : INLINE_SW;
@@ -114,9 +110,8 @@ async function handleRequest(req, res) {
       return res.end(content);
     }
 
-    // 4. API: Live Trending Anime via AniList GraphQL
     if (pathname === '/api/trending') {
-      const gqlQuery = 'query { Page(page: 1, perPage: 12) { media(type: ANIME, sort: TRENDING_DESC) { id title { english romaji native } seasonYear format averageScore episodes status genres coverImage { extraLarge large } bannerImage description(asHtml: false) } } }';
+      const gqlQuery = 'query { Page(page: 1, perPage: 12) { media(type: ANIME, sort: TRENDING_DESC) { id title { english romaji native } seasonYear format averageScore episodes duration status genres coverImage { extraLarge large } bannerImage description(asHtml: false) } } }';
       const response = await fetch('https://graphql.anilist.co', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -126,7 +121,6 @@ async function handleRequest(req, res) {
       return sendJson(res, 200, { status: 'ok', media: (json && json.data && json.data.Page && json.data.Page.media) || [] });
     }
 
-    // 5. API: Resolve Episode Stream (Sub / Dub)
     if (pathname === '/api/stream') {
       const animeId = parsedUrl.searchParams.get('animeId') || 'black-clover';
       const title = parsedUrl.searchParams.get('title') || 'Black Clover';
@@ -168,35 +162,60 @@ async function handleRequest(req, res) {
       const directUrl = DIRECT_ANIME_STREAMS[animeId] || FALLBACK_STREAMS[Number(ep) % FALLBACK_STREAMS.length];
       return sendJson(res, 200, {
         status: 'ok',
-        provider: 'anitag-hd-anime',
+        provider: 'anitag-hd-direct',
         animeId: animeId,
         episode: Number(ep),
         audio: audio,
         isM3U8: false,
-        url: directUrl
+        url: '/api/proxy?url=' + encodeURIComponent(directUrl),
+        fallbackUrl: FALLBACK_STREAMS[Number(ep) % FALLBACK_STREAMS.length]
       });
     }
 
-    // 6. API: Stream & M3U8 CORS Proxy
     if (pathname === '/api/proxy') {
       const targetUrl = parsedUrl.searchParams.get('url');
       if (!targetUrl) return sendJson(res, 400, { error: 'Missing url parameter' });
-      const upstream = await fetch(targetUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          'Referer': new URL(targetUrl).origin
-        }
-      });
+      const reqHeaders = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Referer': new URL(targetUrl).origin
+      };
+      if (req.headers.range) {
+        reqHeaders['Range'] = req.headers.range;
+      }
+      const upstream = await fetch(targetUrl, { headers: reqHeaders });
       const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
-      const buf = Buffer.from(await upstream.arrayBuffer());
-      res.writeHead(upstream.status, {
+
+      if (contentType.includes('mpegurl') || targetUrl.includes('.m3u8')) {
+        const text = await upstream.text();
+        const baseObj = new URL(targetUrl);
+        const rewritten = text.split('\n').map((line) => {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) return line;
+          const absUrl = new URL(trimmed, baseObj).href;
+          return '/api/proxy?url=' + encodeURIComponent(absUrl);
+        }).join('\n');
+        res.writeHead(200, {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/vnd.apple.mpegurl'
+        });
+        return res.end(rewritten);
+      }
+
+      const outHeaders = {
         'Access-Control-Allow-Origin': '*',
-        'Content-Type': contentType
-      });
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes'
+      };
+      const contentRange = upstream.headers.get('content-range');
+      if (contentRange) outHeaders['Content-Range'] = contentRange;
+      const contentLen = upstream.headers.get('content-length');
+      if (contentLen) outHeaders['Content-Length'] = contentLen;
+
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      res.writeHead(upstream.status, outHeaders);
       return res.end(buf);
     }
 
-    // 7. Serve Main HTML Application (checks index.html AND anikage_app.html in root and public/)
     const htmlPath = findDiskFile(['index.html', 'anikage_app.html']);
     if (htmlPath) {
       const htmlContent = fs.readFileSync(htmlPath, 'utf8');
@@ -211,7 +230,6 @@ async function handleRequest(req, res) {
   }
 }
 
-// Start HTTP server when run directly on Render / local Node
 if (require.main === module) {
   const server = http.createServer(handleRequest);
   server.listen(PORT, () => {
@@ -219,5 +237,4 @@ if (require.main === module) {
   });
 }
 
-// Export handler for Vercel Serverless Functions
 module.exports = handleRequest;

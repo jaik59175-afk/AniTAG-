@@ -1,11 +1,10 @@
 {
   "name": "anitag-streaming-app",
-  "version": "2.0.0",
-  "description": "AniTAG \u2014 Zero-dependency full-stack HD anime streaming web app & PWA",
+  "version": "2.2.0",
+  "description": "AniTAG Full-Stack Anime Streaming App for Vercel and Render",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'Build complete'"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"

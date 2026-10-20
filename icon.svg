@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
-  <rect width="200" height="200" rx="44" fill="#17130F"/>
-  <ellipse cx="100" cy="122" rx="86" ry="22" fill="#E8C36A" stroke="#F7F3EA" stroke-width="4"/>
-  <path d="M50 118 C50 66 150 66 150 118 A52 10 0 0 1 50 118 Z" fill="#E8C36A"/>
-  <path d="M57 97 A43 10 0 0 0 143 97 L150 118 A52 10 0 0 1 50 118 Z" fill="#C1442E"/>
-  <path d="M50 118 C50 66 150 66 150 118 A52 10 0 0 1 50 118 Z" fill="none" stroke="#17130F" stroke-width="4" stroke-linejoin="round"/>
-  <g transform="translate(99.5 118.5) scale(1.2)" fill="none" stroke="#F7F3EA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M0 0 A2.2 2.2 0 0 1 0 4.4 A4.4 4.4 0 0 1 0 -4.4 A5.2 5.2 0 0 1 0 6"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512"><rect width="200" height="200" rx="44" fill="#17130F"/><ellipse cx="100" cy="122" rx="86" ry="22" fill="#E8C36A" stroke="#F7F3EA" stroke-width="4"/><path d="M50 118 C50 66 150 66 150 118 A52 10 0 0 1 50 118 Z" fill="#E8C36A"/><path d="M57 97 A43 10 0 0 0 143 97 L150 118 A52 10 0 0 1 50 118 Z" fill="#C1442E"/><path d="M50 118 C50 66 150 66 150 118 A52 10 0 0 1 50 118 Z" fill="none" stroke="#17130F" stroke-width="4" stroke-linejoin="round"/><g transform="translate(99.5 118.5) scale(1.2)" fill="none" stroke="#F7F3EA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0 A2.2 2.2 0 0 1 0 4.4 A4.4 4.4 0 0 1 0 -4.4 A5.2 5.2 0 0 1 0 6"/></g></svg>

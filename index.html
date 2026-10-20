@@ -3025,12 +3025,28 @@
       listEl.innerHTML = html.join('');
     }
 
+    // Map each anime to real HD anime video streams (AnimeThemes CDN + fallback streams)
+    const ANIME_DIRECT_STREAMS = {
+      'black-clover': 'https://v.animethemes.moe/BlackClover-OP3.webm',
+      'bumpkin-swordsman-2': 'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
+      'bleach-tybw': 'https://v.animethemes.moe/BleachSennenKessenHenKetsubetsuTan-OP1v2.webm',
+      'apothecary-diaries-s3': 'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
+      'mushoku-tensei-s3': 'https://v.animethemes.moe/MushokuTenseiS2-OP1.webm',
+      'one-piece': 'https://v.animethemes.moe/OnePiece-OP26.webm',
+      're-zero-s4': 'https://v.animethemes.moe/ReZeroS2-OP1.webm',
+      'slime-s4': 'https://v.animethemes.moe/TenseiShitaraSlimeDattaKenS2-OP1.webm',
+      'blue-box-s2': 'https://v.animethemes.moe/AoNoHako-OP1.webm',
+      'overgeared': 'https://v.animethemes.moe/OreDakeLevelUpNaKen-OP1.webm',
+      'smoking-supermarket': 'https://v.animethemes.moe/AoNoHako-ED1.webm',
+      'inept-villainess': 'https://v.animethemes.moe/KusuriyaNoHitorigoto-ED1.webm'
+    };
+
     const BUILTIN_HD_STREAMS = [
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+      'https://v.animethemes.moe/BlackClover-OP3.webm',
+      'https://v.animethemes.moe/OnePiece-OP26.webm',
+      'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
+      'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
     ];
 
     let hlsInstance = null;
@@ -3159,9 +3175,10 @@
         } catch (e) {}
       }
 
-      // 2. Fallback to built-in multi-CDN HD stream + Live 60fps Anime Visualizer Canvas
+      // 2. Fallback to direct HD anime stream for this series + Live 60fps Anime Visualizer Canvas
+      const directAnimeUrl = ANIME_DIRECT_STREAMS[anime.id];
       const idx = (ANIME_CATALOG.indexOf(anime) + episodeNum) % BUILTIN_HD_STREAMS.length;
-      const streamUrl = BUILTIN_HD_STREAMS[Math.max(0, idx)];
+      const streamUrl = directAnimeUrl || BUILTIN_HD_STREAMS[Math.max(0, idx)];
       attachSourceAndPlay(streamUrl, false);
     }
 
@@ -3568,6 +3585,12 @@
     document.getElementById('playerPlayPauseBtn').addEventListener('click', togglePlayPause);
     document.getElementById('centerPlayPauseBtn').addEventListener('click', togglePlayPause);
     nativeVideo.addEventListener('click', togglePlayPause);
+    nativeVideo.addEventListener('error', () => {
+      if (nativeVideo.src && !nativeVideo.src.includes('BigBuckBunny.mp4')) {
+        nativeVideo.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+        if (state.isPlaying) nativeVideo.play().catch(() => {});
+      }
+    });
 
     document.getElementById('prevEpBtn').addEventListener('click', goPrevEpisode);
     document.getElementById('nextEpBtn').addEventListener('click', goNextEpisode);

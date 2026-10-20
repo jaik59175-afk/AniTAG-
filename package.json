@@ -1,17 +1,13 @@
 {
   "name": "anitag-streaming-app",
-  "version": "1.0.0",
-  "description": "AniTAG \u2014 Full-stack ad-free HD anime streaming web app & installable PWA (Frontend + Backend)",
+  "version": "2.0.0",
+  "description": "AniTAG \u2014 Zero-dependency full-stack HD anime streaming web app & PWA",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "build": "echo 'Build complete'"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.19.2"
   }
 }

@@ -801,10 +801,12 @@
             preload="auto"
           ></video>
 
-          <!-- Full-Episode Cloud Embed Iframe (Active when Full Ep Server is selected) -->
+          <!-- Full-Episode Cloud Embed Iframe (Ad-Blocked Sandbox for Anikoto / AnimeGG / 2DHiVE / VidLink) -->
           <iframe
             id="cloudEpisodeEmbedFrame"
             class="hidden absolute inset-0 w-full h-full bg-black z-30 border-0"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+            referrerpolicy="no-referrer"
             allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             allowfullscreen
           ></iframe>
@@ -1244,22 +1246,37 @@
                 <span id="watchBarCcText">CC: ON</span>
               </button>
 
-              <!-- Server Selector Pill (Koto 24m / Miruro HD / VidLink 24m / 2Anime Cloud — Linear Server Icon) -->
-              <div class="flex flex-wrap items-center kage-pill rounded-full p-0.5 text-xs">
-                <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5" title="Direct 24-Min Full Episode Native Player (Server 1)">
+              <!-- Anivexa Multi-Provider Server Selector (Anikoto / AnimeGG / AniBD / 2DHiVE / Mkissa / VidLink) -->
+              <div class="flex flex-wrap items-center kage-pill rounded-full p-0.5 text-xs gap-0.5">
+                <button data-server="anikoto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5" title="Anikoto Official API (Ad-Blocked Sub/Dub Stream)">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  <span>Koto 24m</span>
+                  <span>Anikoto</span>
                 </button>
-                <button data-server="Miruro" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="Miruro / VidLink Full 24-Min Episode Stream (Server 2)">
-                  <span>Miruro HD</span>
+                <button data-server="animegg" class="server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1" title="AnimeGG Fast Stream Server">
+                  <span>AnimeGG</span>
                 </button>
-                <button data-server="VidSrc" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="VidSrc Full 24-Min Episode Stream (Server 3)">
-                  <span>VidSrc 24m</span>
+                <button data-server="anibd" class="server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1" title="AniBD Direct HLS/MP4 Server">
+                  <span>AniBD</span>
                 </button>
-                <button data-server="CloudEmbed" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="2Anime Full 24-Min Episode Cloud Server (Server 4)">
-                  <span>2Anime Cloud</span>
+                <button data-server="2dhive" class="server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1" title="2DHiVE Multi-Server Stream">
+                  <span>2DHiVE</span>
+                </button>
+                <button data-server="mkissa" class="server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1" title="Mkissa Direct HLS Server">
+                  <span>Mkissa</span>
+                </button>
+                <button data-server="vidlink" class="server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1" title="VidLink / Miruro Cloud HD Server">
+                  <span>VidLink HD</span>
                 </button>
               </div>
+
+              <!-- Stream Mirror Selector (When a provider returns multiple stream mirrors) -->
+              <select id="streamMirrorSelect" class="hidden kage-pill rounded-full px-2.5 py-1 text-[11px] font-semibold text-white bg-transparent focus:outline-none cursor-pointer" title="Switch Stream Mirror"></select>
+
+              <!-- Ad-Block Shield Badge for Embedded Streams -->
+              <button id="adShieldToggleBtn" class="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold flex items-center gap-1 transition-all" title="Popup & Redirect Ad-Blocker is Active on All Servers">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                <span id="adShieldStatusText">Ad-Block ON</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1417,25 +1434,49 @@
 
       </div>
 
-      <!-- RIGHT SIDEBAR: EPISODES & SEASONS -->
-      <aside id="playerEpisodesCol" class="lg:col-span-3 space-y-4">
-        <div class="kage-card rounded-2xl p-3.5 flex flex-col h-[460px] sm:h-[540px]">
-          <div class="flex items-center justify-between gap-2 pb-3 border-b" style="border-color: var(--border-subtle);">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-1 rounded-full kage-pill text-xs font-bold text-white flex items-center gap-1.5">
+      <!-- RIGHT SIDEBAR: SEASONS & 100-EPISODE SECTIONS -->
+      <aside id="playerEpisodesCol" class="lg:col-span-3 space-y-3">
+        <div class="kage-card rounded-2xl p-3.5 flex flex-col h-[520px] sm:h-[600px]">
+          <!-- Top Header: Episodes Count + Jump to Ep # Input -->
+          <div class="flex items-center justify-between gap-2 pb-2.5 border-b" style="border-color: var(--border-subtle);">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="px-2.5 py-1 rounded-full kage-pill text-xs font-bold text-white flex items-center gap-1.5 shrink-0">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
-                Episodes
+                <span>Episodes</span>
               </span>
-              <span id="episodeRangeSubtitle" class="text-[11px] tabular-nums text-neutral-400">1–170</span>
+              <span id="episodeRangeSubtitle" class="text-[11px] tabular-nums text-neutral-400 truncate">1–170</span>
             </div>
             <input
               id="episodeFilterInput"
               type="text"
-              placeholder="Ep #..."
-              class="w-20 kage-pill rounded-full px-2.5 py-1 text-xs text-white placeholder-neutral-500 focus:outline-none"
+              placeholder="Ep # or title..."
+              class="w-24 sm:w-28 kage-pill rounded-full px-2.5 py-1 text-xs text-white placeholder-neutral-500 focus:outline-none"
             />
           </div>
 
+          <!-- Multi-Season Selector Bar (Shown when anime has multiple seasons or saga groups) -->
+          <div id="playerSeasonSelectorWrap" class="pt-2.5 pb-2 border-b space-y-1.5" style="border-color: var(--border-subtle);">
+            <div class="flex items-center justify-between text-[10px] uppercase tracking-wider text-neutral-400 font-semibold px-0.5">
+              <span id="seasonSelectorHeaderLabel">Seasons / Arcs</span>
+              <span id="seasonTotalCountBadge" class="tabular-nums text-neutral-300">Season 1</span>
+            </div>
+            <div id="playerSeasonTabsRow" class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"></div>
+          </div>
+
+          <!-- 100-Episode Section Range Bar (1–100, 101–200, 201–300, ... 1101–1180) -->
+          <div id="episodeChunkSelectorWrap" class="pt-2 pb-2 border-b space-y-1.5" style="border-color: var(--border-subtle);">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold pl-0.5">Episode Section (100 / page)</span>
+              <select
+                id="episodeChunkSelectDropdown"
+                class="kage-pill rounded-lg px-2 py-0.5 text-[11px] font-bold text-white bg-transparent focus:outline-none cursor-pointer tabular-nums"
+                title="Select 100-Episode Range Section"
+              ></select>
+            </div>
+            <div id="episodeChunkPillsRow" class="flex items-center gap-1 overflow-x-auto pb-1"></div>
+          </div>
+
+          <!-- Scrollable Chronological Episode Cards List -->
           <div id="playerEpisodeList" class="flex-1 overflow-y-auto space-y-1.5 pt-2.5 pr-1"></div>
         </div>
       </aside>
@@ -2367,7 +2408,22 @@
         'Clash with the Black Cat Pirates! The Great Battle on the Slope!',
         'The Terrifying Duo! Meowban Brothers vs. Zoro!',
         'Luffy Back in Action! Miss Kaya\'s Desperate Resistance!',
-        'Beat Kuro! Usopp the Man\'s Tearful Resolve!'
+        'Beat Kuro! Usopp the Man\'s Tearful Resolve!',
+        'Protect Kaya! The Usopp Pirates\' Great Efforts!',
+        'Angry Explosion! Kuro vs. Luffy! How it Ends!',
+        'You\'re the Weird Creature! Gaimon and His Strange Friends!',
+        'The Three-Sword Style\'s Past! Zoro and Kuina\'s Vow!',
+        'Famous Cook! Sanji of the Sea Restaurant!',
+        'Unwelcome Customer! Sanji\'s Food and Ghin\'s Debt!',
+        'The Strongest Pirate Fleet! Commodore Don Krieg!',
+        'Protect Baratie! The Great Pirate, Red Foot Zeff!',
+        'Hawk-Eye Mihawk! The Great Swordsman Zoro Falls at Sea!',
+        'The Deadly Foot Technique Bursts Forth! Sanji vs. the Invincible Pearl!',
+        'Zeff and Sanji\'s Dream! The Illusory All Blue!',
+        'Cold-Blooded, Heartless Demon! Pirate Fleet Chief Commander Ghin!',
+        'I Won\'t Die! Fierce Battle, Luffy vs. Krieg!',
+        'The Conclusion of the Deadly Battle! A Spear of Determination!',
+        'Set Sail! The Seafaring Cook Sets Off With Luffy!'
       ],
       'bleach-tybw': [
         'A',
@@ -2528,50 +2584,214 @@
       ]
     };
 
+    // Multi-Season & Saga Definitions per Franchise (Allows switching Seasons OR 100-Episode Season Ranges)
+    const ANIME_SEASONS_MAP = {
+      'bleach-tybw': [
+        { seasonNum: 1, label: 'Season 1: The Blood Warfare', shortLabel: 'Season 1', anilistId: 116674, malId: 41467, total: 13, sub: 13, dub: 13, year: 2022 },
+        { seasonNum: 2, label: 'Season 2: The Separation', shortLabel: 'Season 2', anilistId: 159322, malId: 53998, total: 13, sub: 13, dub: 13, year: 2023 },
+        { seasonNum: 3, label: 'Season 3: The Conflict', shortLabel: 'Season 3', anilistId: 169755, malId: 56784, total: 14, sub: 14, dub: 12, year: 2024 }
+      ],
+      'apothecary-diaries-s3': [
+        { seasonNum: 1, label: 'Season 1 (Cour 1 & 2)', shortLabel: 'Season 1 (1–24)', anilistId: 161645, malId: 54492, total: 24, sub: 24, dub: 24, year: 2023 },
+        { seasonNum: 2, label: 'Season 2 (2025)', shortLabel: 'Season 2 (1–24)', anilistId: 176301, malId: 58514, total: 24, sub: 12, dub: 10, year: 2025 }
+      ],
+      'mushoku-tensei-s3': [
+        { seasonNum: 1, label: 'Season 1 (Part 1 & 2)', shortLabel: 'Season 1 (1–23)', anilistId: 108465, malId: 39535, total: 23, sub: 23, dub: 23, year: 2021 },
+        { seasonNum: 2, label: 'Season 2 (Part 1 & 2)', shortLabel: 'Season 2 (1–24)', anilistId: 146065, malId: 51179, total: 24, sub: 24, dub: 24, year: 2023 }
+      ],
+      're-zero-s4': [
+        { seasonNum: 1, label: 'Season 1', shortLabel: 'Season 1 (1–25)', anilistId: 21355, malId: 31240, total: 25, sub: 25, dub: 25, year: 2016 },
+        { seasonNum: 2, label: 'Season 2', shortLabel: 'Season 2 (1–25)', anilistId: 108632, malId: 39587, total: 25, sub: 25, dub: 25, year: 2020 },
+        { seasonNum: 3, label: 'Season 3', shortLabel: 'Season 3 (1–16)', anilistId: 163134, malId: 54857, total: 16, sub: 16, dub: 14, year: 2024 }
+      ],
+      'slime-s4': [
+        { seasonNum: 1, label: 'Season 1', shortLabel: 'Season 1 (1–24)', anilistId: 101280, malId: 37430, total: 24, sub: 24, dub: 24, year: 2018 },
+        { seasonNum: 2, label: 'Season 2', shortLabel: 'Season 2 (1–24)', anilistId: 108511, malId: 39551, total: 24, sub: 24, dub: 24, year: 2021 },
+        { seasonNum: 3, label: 'Season 3', shortLabel: 'Season 3 (1–24)', anilistId: 156822, malId: 53580, total: 24, sub: 24, dub: 24, year: 2024 }
+      ],
+      'solo-leveling': [
+        { seasonNum: 1, label: 'Season 1', shortLabel: 'Season 1 (1–12)', anilistId: 151807, malId: 52299, total: 12, sub: 12, dub: 12, year: 2024 },
+        { seasonNum: 2, label: 'Season 2: Arise from the Shadow', shortLabel: 'Season 2 (1–13)', anilistId: 176496, malId: 58567, total: 13, sub: 13, dub: 12, year: 2025 }
+      ],
+      'bumpkin-swordsman-2': [
+        { seasonNum: 1, label: 'Season 1', shortLabel: 'Season 1 (1–12)', anilistId: 179955, malId: 59452, total: 12, sub: 12, dub: 12, year: 2025 }
+      ],
+      'blue-box-s2': [
+        { seasonNum: 1, label: 'Season 1', shortLabel: 'Season 1 (1–25)', anilistId: 170942, malId: 57181, total: 25, sub: 25, dub: 24, year: 2024 }
+      ]
+    };
+
+    // Authentic Arc / Saga Names for Long-Running Anime so Every Episode Has Rich Metadata
+    function getOnePieceArcName(ep) {
+      if (ep <= 61) return 'East Blue Saga';
+      if (ep <= 135) return 'Alabasta Saga';
+      if (ep <= 206) return 'Sky Island Saga';
+      if (ep <= 325) return 'Water 7 / Enies Lobby Saga';
+      if (ep <= 384) return 'Thriller Bark Saga';
+      if (ep <= 516) return 'Summit War / Marineford Saga';
+      if (ep <= 574) return 'Fish-Man Island Saga';
+      if (ep <= 746) return 'Dressrosa Saga';
+      if (ep <= 891) return 'Whole Cake Island Saga';
+      if (ep <= 1085) return 'Wano Country Saga';
+      return 'Egghead Island Saga';
+    }
+
+    function getBlackCloverArcName(ep) {
+      if (ep <= 13) return 'Magic Knights Entrance Arc';
+      if (ep <= 27) return 'Dungeon & Royal Capital Arc';
+      if (ep <= 39) return 'Eye of the Midnight Sun Arc';
+      if (ep <= 50) return 'Seabed Temple Arc';
+      if (ep <= 65) return "Witches' Forest Arc";
+      if (ep <= 84) return 'Royal Knights Selection Arc';
+      if (ep <= 120) return 'Elf Reincarnation Arc';
+      if (ep <= 157) return 'Heart Kingdom Joint Struggle Arc';
+      return 'Spade Kingdom Raid Arc';
+    }
+
+    // LIVE_EPISODE_CACHE is indexed by cacheKey -> { [exactEpisodeNumber]: { ep, title, thumb } }
+    // NEVER indexed by raw array offset so reverse-ordered API lists can never mislabel Episode 130 as EP 1!
     const LIVE_EPISODE_CACHE = {};
+    const JIKAN_FETCHED_PAGES = {};
+    const ANIZIP_FETCHED = {};
+
+    function getActiveCacheKey(anime) {
+      if (!anime) return 'default';
+      const ext = getAnimeExtras(anime);
+      const activeAnilistId = state.activeSeasonAnilistId || ext.anilistId || anime.id;
+      return `${anime.id}_${activeAnilistId}`;
+    }
+
+    function storeEpisodeInCache(cacheKey, epNum, title, thumb) {
+      const n = parseInt(epNum, 10);
+      if (!n || n < 1 || n > 5000) return;
+      if (!LIVE_EPISODE_CACHE[cacheKey]) LIVE_EPISODE_CACHE[cacheKey] = {};
+      const existing = LIVE_EPISODE_CACHE[cacheKey][n] || {};
+      const cleanTitle = title ? String(title).replace(/^Episode\s*\d+\s*[-:]\s*/i, '').trim() : '';
+      const isGeneric = !cleanTitle || /^Episode\s*\d+$/i.test(cleanTitle);
+      LIVE_EPISODE_CACHE[cacheKey][n] = {
+        ep: n,
+        title: (!isGeneric ? cleanTitle : (existing.title || cleanTitle || `Episode ${n}`)),
+        thumb: thumb || existing.thumb || ''
+      };
+    }
 
     function getEpisodeTitle(anime, epNum) {
       if (!anime) return `Episode ${epNum}`;
-      const liveList = LIVE_EPISODE_CACHE[anime.id];
-      if (liveList && liveList[epNum - 1] && liveList[epNum - 1].title) {
-        return liveList[epNum - 1].title;
+      const cacheKey = getActiveCacheKey(anime);
+      const map = LIVE_EPISODE_CACHE[cacheKey];
+      if (map && map[epNum] && map[epNum].title && !/^Episode\s*\d+$/i.test(map[epNum].title)) {
+        return map[epNum].title;
       }
       const staticList = ANIME_EPISODE_TITLES[anime.id] || [];
-      if (staticList[epNum - 1]) {
+      if ((!state.activeSeasonNum || state.activeSeasonNum === 1) && staticList[epNum - 1]) {
         return staticList[epNum - 1];
+      }
+      if (anime.id === 'one-piece') {
+        return `${getOnePieceArcName(epNum)} — Episode ${epNum}`;
+      }
+      if (anime.id === 'black-clover') {
+        return `${getBlackCloverArcName(epNum)} — Episode ${epNum}`;
       }
       return `${getTitle(anime)} • Episode ${epNum}`;
     }
 
     function getEpisodeThumb(anime, epNum) {
-      const liveList = anime && LIVE_EPISODE_CACHE[anime.id];
-      if (liveList && liveList[epNum - 1] && liveList[epNum - 1].thumb) {
-        return liveList[epNum - 1].thumb;
+      if (!anime) return '';
+      const cacheKey = getActiveCacheKey(anime);
+      const map = LIVE_EPISODE_CACHE[cacheKey];
+      if (map && map[epNum] && map[epNum].thumb) {
+        return map[epNum].thumb;
       }
       return getPosterUrl(anime);
     }
 
-    async function fetchRealEpisodesForAnime(anime) {
-      if (!anime || LIVE_EPISODE_CACHE[anime.id]) return;
-      const ext = getAnimeExtras(anime);
-      if (!ext.malId || anime.id === 'overgeared') return;
+    // Fetch Jikan page (100 episodes per page) for the given malId and 1-based page number
+    async function fetchJikanEpisodePage(anime, malId, pageNum = 1) {
+      if (!anime || !malId) return;
+      const cacheKey = getActiveCacheKey(anime);
+      const pageKey = `${cacheKey}_p${pageNum}`;
+      if (JIKAN_FETCHED_PAGES[pageKey]) return;
+      JIKAN_FETCHED_PAGES[pageKey] = true;
       try {
-        const res = await fetch(`https://api.jikan.moe/v4/anime/${ext.malId}/episodes`);
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${malId}/episodes?page=${pageNum}`);
         if (!res.ok) return;
         const json = await res.json();
         const data = (json && json.data) || [];
-        if (data.length) {
-          LIVE_EPISODE_CACHE[anime.id] = data.map((item, idx) => ({
-            ep: item.mal_id || (idx + 1),
-            title: item.title || item.title_romanji || `Episode ${idx + 1}`
-          }));
-          if (state.playerOpen && state.activeAnime && state.activeAnime.id === anime.id) {
-            renderPlayerEpisodes(document.getElementById('episodeFilterInput').value);
-            const curEpTitle = getEpisodeTitle(anime, state.activeEpisode);
-            document.getElementById('watchEpisodeHeading').textContent = `${getTitle(anime)} — Episode ${state.activeEpisode}: ${curEpTitle}`;
-          }
+        data.forEach((item, idx) => {
+          const realEp = item.mal_id || ((pageNum - 1) * 100 + idx + 1);
+          const epTitle = item.title || item.title_romanji || `Episode ${realEp}`;
+          storeEpisodeInCache(cacheKey, realEp, epTitle, '');
+        });
+        if (state.playerOpen && state.activeAnime && state.activeAnime.id === anime.id) {
+          renderPlayerEpisodes(document.getElementById('episodeFilterInput').value, true);
+          const curEpTitle = getEpisodeTitle(anime, state.activeEpisode);
+          document.getElementById('watchEpisodeHeading').textContent = `${getTitle(anime)} — Episode ${state.activeEpisode}: ${curEpTitle}`;
         }
       } catch (e) {}
+    }
+
+    // Hydrate all episodes & thumbnails from AniZip + Anivexa API (/episodes/anikoto/:id) + Jikan Page
+    async function fetchRealEpisodesForAnime(anime, targetChunkIndex = null) {
+      if (!anime) return;
+      const ext = getAnimeExtras(anime);
+      const anilistId = state.activeSeasonAnilistId || ext.anilistId || 0;
+      const malId = state.activeSeasonMalId || ext.malId || 0;
+      const cacheKey = getActiveCacheKey(anime);
+
+      const chunkIdx = targetChunkIndex !== null ? targetChunkIndex : (state.activeEpisodeChunk || 0);
+      const jikanPage = chunkIdx + 1;
+
+      // 1. Fetch Jikan page for the active 100-episode section (and page 1)
+      if (malId && anime.id !== 'overgeared') {
+        fetchJikanEpisodePage(anime, malId, jikanPage);
+        if (jikanPage !== 1) fetchJikanEpisodePage(anime, malId, 1);
+      }
+
+      // 2. Fetch complete episode metadata & thumbnails from api.ani.zip (returns all episodes 1..1180+ in one call)
+      if (anilistId && !ANIZIP_FETCHED[cacheKey]) {
+        ANIZIP_FETCHED[cacheKey] = true;
+        try {
+          const azRes = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistId}`);
+          if (azRes.ok) {
+            const azData = await azRes.json();
+            const epsObj = (azData && azData.episodes) || {};
+            Object.keys(epsObj).forEach(k => {
+              const epNum = parseInt(k, 10);
+              if (!epNum || epNum < 1) return;
+              const epInfo = epsObj[k];
+              const tObj = (epInfo && epInfo.title) || {};
+              const titleStr = tObj.en || tObj["x-jat"] || tObj.ja || epInfo.title || '';
+              const thumbStr = epInfo.image || '';
+              storeEpisodeInCache(cacheKey, epNum, titleStr, thumbStr);
+            });
+            if (state.playerOpen && state.activeAnime && state.activeAnime.id === anime.id) {
+              renderPlayerEpisodes(document.getElementById('episodeFilterInput').value, true);
+              const curEpTitle = getEpisodeTitle(anime, state.activeEpisode);
+              document.getElementById('watchEpisodeHeading').textContent = `${getTitle(anime)} — Episode ${state.activeEpisode}: ${curEpTitle}`;
+            }
+          }
+        } catch (e) {}
+
+        // 3. Also query our integrated Anivexa backend (/episodes/anikoto/:id) if running on server
+        if (location.protocol.startsWith('http')) {
+          try {
+            const avRes = await fetch(`/episodes/anikoto/${anilistId}?map=false`);
+            if (avRes.ok) {
+              const avJson = await avRes.json();
+              const subEps = (avJson && avJson.data && avJson.data.episodes && avJson.data.episodes.sub) || [];
+              subEps.forEach(item => {
+                const epNum = parseInt(item.number, 10);
+                if (epNum > 0) {
+                  storeEpisodeInCache(cacheKey, epNum, item.title || '', item.image || item.thumbnail || '');
+                }
+              });
+              if (state.playerOpen && state.activeAnime && state.activeAnime.id === anime.id) {
+                renderPlayerEpisodes(document.getElementById('episodeFilterInput').value, true);
+              }
+            }
+          } catch (e) {}
+        }
+      }
     }
 
     const ANIME_SUBTITLE_SCRIPTS = {
@@ -2905,6 +3125,9 @@
           : 'audio-pref-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5';
       });
 
+      if (state.playerOpen && state.activeAnime) {
+        loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
+      }
       showToast(`Audio Preference: ${state.audioMode === 'DUB' ? 'English Dub' : 'Original Sub'}`);
     }
 
@@ -3652,30 +3875,176 @@
     });
 
     // -----------------------------------------------------------------------
-    // RIGHT SIDEBAR EPISODE CARDS (LINEAR CC & MIC ICONS)
+    // RIGHT SIDEBAR: MULTI-SEASON SELECTOR + 100-EPISODE SECTIONS + EPISODE LIST
     // -----------------------------------------------------------------------
-    function renderPlayerEpisodes(filterText = '') {
+    state.activeSeasonNum = 1;
+    state.activeSeasonAnilistId = 0;
+    state.activeSeasonMalId = 0;
+    state.activeEpisodeChunk = 0; // 0 = 1..100, 1 = 101..200, etc.
+    state.adShieldEnabled = true;
+
+    function getSeasonsForAnime(anime) {
+      if (!anime) return [];
+      if (ANIME_SEASONS_MAP[anime.id] && ANIME_SEASONS_MAP[anime.id].length > 1) {
+        return ANIME_SEASONS_MAP[anime.id];
+      }
+      // For single-season long-running anime (>100 episodes like One Piece or Black Clover),
+      // generate Season-style 100-episode blocks (Season 1: 1-100, Season 2: 101-200, etc.)
+      const totalEps = Math.max(1, anime.total || anime.sub || 12);
+      const ext = getAnimeExtras(anime);
+      if (totalEps > 100) {
+        const numChunks = Math.ceil(totalEps / 100);
+        const virtualSeasons = [];
+        for (let c = 0; c < numChunks; c++) {
+          const startEp = c * 100 + 1;
+          const endEp = Math.min(totalEps, (c + 1) * 100);
+          let arcHint = '';
+          if (anime.id === 'one-piece') arcHint = ` • ${getOnePieceArcName(startEp).replace(' Saga', '')}`;
+          else if (anime.id === 'black-clover') arcHint = ` • ${getBlackCloverArcName(startEp).replace(' Arc', '')}`;
+          virtualSeasons.push({
+            seasonNum: c + 1,
+            isVirtualChunk: true,
+            chunkIndex: c,
+            startEp,
+            endEp,
+            label: `Season ${c + 1} (${startEp}–${endEp})${arcHint}`,
+            shortLabel: `S${c + 1}: ${startEp}–${endEp}`,
+            anilistId: ext.anilistId,
+            malId: ext.malId,
+            total: totalEps,
+            sub: anime.sub,
+            dub: anime.dub,
+            year: anime.year
+          });
+        }
+        return virtualSeasons;
+      }
+      return [
+        {
+          seasonNum: 1,
+          label: `Season 1 (1–${totalEps})`,
+          shortLabel: `Season 1 (1–${totalEps})`,
+          anilistId: ext.anilistId,
+          malId: ext.malId,
+          total: totalEps,
+          sub: anime.sub,
+          dub: anime.dub,
+          year: anime.year
+        }
+      ];
+    }
+
+    function renderPlayerEpisodes(filterText = '', preserveScroll = false) {
       const listEl = document.getElementById('playerEpisodeList');
-      const totalEps = Math.min(state.activeAnime.total || state.activeAnime.sub || 24, 60);
-      document.getElementById('episodeRangeSubtitle').textContent = `1–${state.activeAnime.total}`;
-      const fallback = createPosterDataUri(state.activeAnime, false);
-      const extras = getAnimeExtras(state.activeAnime);
+      if (!listEl || !state.activeAnime) return;
+
+      const anime = state.activeAnime;
+      const seasons = getSeasonsForAnime(anime);
+      const isMultiRealSeason = Boolean(ANIME_SEASONS_MAP[anime.id] && ANIME_SEASONS_MAP[anime.id].length > 1);
+      const activeSeasonObj = isMultiRealSeason
+        ? (seasons.find(s => s.seasonNum === state.activeSeasonNum) || seasons[0])
+        : seasons[0];
+
+      const totalEps = Math.max(1, (isMultiRealSeason && activeSeasonObj ? activeSeasonObj.total : (anime.total || anime.sub || 12)));
+      const totalDub = isMultiRealSeason && activeSeasonObj ? activeSeasonObj.dub : (anime.dub || 0);
+      const CHUNK_SIZE = 100;
+      const totalChunks = Math.max(1, Math.ceil(totalEps / CHUNK_SIZE));
+
+      if (state.activeEpisodeChunk >= totalChunks || state.activeEpisodeChunk < 0) {
+        state.activeEpisodeChunk = Math.floor((Math.max(1, state.activeEpisode) - 1) / CHUNK_SIZE);
+      }
+
+      const startEp = state.activeEpisodeChunk * CHUNK_SIZE + 1;
+      const endEp = Math.min(totalEps, (state.activeEpisodeChunk + 1) * CHUNK_SIZE);
+
+      const rangeSub = document.getElementById('episodeRangeSubtitle');
+      if (rangeSub) {
+        rangeSub.textContent = totalEps > CHUNK_SIZE
+          ? `${startEp}–${endEp} of ${totalEps}`
+          : `1–${totalEps} (${totalEps} Eps)`;
+      }
+
+      // 1. Render Multi-Season or Virtual Season Arc Tabs
+      const seasonWrap = document.getElementById('playerSeasonSelectorWrap');
+      const seasonRow = document.getElementById('playerSeasonTabsRow');
+      const seasonHeaderLbl = document.getElementById('seasonSelectorHeaderLabel');
+      const seasonCountBadge = document.getElementById('seasonTotalCountBadge');
+
+      if (seasonWrap && seasonRow) {
+        if (isMultiRealSeason) {
+          seasonWrap.classList.remove('hidden');
+          if (seasonHeaderLbl) seasonHeaderLbl.textContent = 'Select Season';
+          if (seasonCountBadge) seasonCountBadge.textContent = `${seasons.length} Seasons`;
+          seasonRow.innerHTML = seasons.map(s => {
+            const active = s.seasonNum === state.activeSeasonNum;
+            return `<button type="button" data-select-season="${s.seasonNum}" class="shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'accent-fill shadow-sm' : 'kage-pill text-neutral-300 hover:text-white'}" title="${s.label}">${s.shortLabel}</button>`;
+          }).join('');
+        } else if (totalEps > CHUNK_SIZE) {
+          seasonWrap.classList.remove('hidden');
+          if (seasonHeaderLbl) seasonHeaderLbl.textContent = 'Seasons (100 Ep Blocks)';
+          if (seasonCountBadge) seasonCountBadge.textContent = `${seasons.length} Sections`;
+          seasonRow.innerHTML = seasons.map(s => {
+            const active = s.chunkIndex === state.activeEpisodeChunk;
+            return `<button type="button" data-select-chunk="${s.chunkIndex}" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold tabular-nums transition-all ${active ? 'accent-fill shadow-sm' : 'kage-pill text-neutral-300 hover:text-white'}" title="${s.label}">${s.shortLabel}</button>`;
+          }).join('');
+        } else {
+          seasonWrap.classList.add('hidden');
+        }
+      }
+
+      // 2. Render 100-Episode Range Section Dropdown & Pills (1-100, 101-200, ..., 1101-1180)
+      const chunkWrap = document.getElementById('episodeChunkSelectorWrap');
+      const chunkSelect = document.getElementById('episodeChunkSelectDropdown');
+      const chunkPills = document.getElementById('episodeChunkPillsRow');
+
+      if (chunkWrap && chunkSelect && chunkPills) {
+        if (totalChunks > 1) {
+          chunkWrap.classList.remove('hidden');
+          const optionsHtml = [];
+          const pillsHtml = [];
+          for (let c = 0; c < totalChunks; c++) {
+            const cStart = c * CHUNK_SIZE + 1;
+            const cEnd = Math.min(totalEps, (c + 1) * CHUNK_SIZE);
+            const isSel = c === state.activeEpisodeChunk;
+            optionsHtml.push(`<option value="${c}" ${isSel ? 'selected' : ''} style="background:#141418;color:#fff;">EP ${cStart}–${cEnd}</option>`);
+            pillsHtml.push(`<button type="button" data-select-chunk="${c}" class="shrink-0 px-2.5 py-0.5 rounded-lg text-[10px] font-bold tabular-nums transition-all ${isSel ? 'accent-fill' : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10'}">${cStart}–${cEnd}</button>`);
+          }
+          chunkSelect.innerHTML = optionsHtml.join('');
+          chunkPills.innerHTML = pillsHtml.join('');
+        } else {
+          chunkWrap.classList.add('hidden');
+        }
+      }
+
+      const fallback = createPosterDataUri(anime, false);
+      const extras = getAnimeExtras(anime);
       const epDurShort = (extras.duration || '24 min').replace(' min / ep', 'm');
+      const trimmedFilter = (filterText || '').trim().toLowerCase();
 
       const html = [];
-      for (let ep = 1; ep <= totalEps; ep++) {
-        const epTitle = getEpisodeTitle(state.activeAnime, ep);
-        if (filterText && !String(ep).includes(filterText.trim()) && !epTitle.toLowerCase().includes(filterText.trim().toLowerCase())) continue;
+      // If user typed a search filter, search across ALL episodes (1..totalEps); otherwise render the active 100-episode section (startEp..endEp)
+      const loopStart = trimmedFilter ? 1 : startEp;
+      const loopEnd = trimmedFilter ? totalEps : endEp;
+
+      for (let ep = loopStart; ep <= loopEnd; ep++) {
+        const epTitle = getEpisodeTitle(anime, ep);
+        if (trimmedFilter) {
+          const matchesNum = String(ep) === trimmedFilter || String(ep).includes(trimmedFilter);
+          const matchesTitle = epTitle.toLowerCase().includes(trimmedFilter);
+          if (!matchesNum && !matchesTitle) continue;
+          if (html.length >= 120) break; // keep DOM snappy during wildcard search
+        }
         const isCurrent = ep === state.activeEpisode;
-        const thumbUrl = getEpisodeThumb(state.activeAnime, ep);
+        const thumbUrl = getEpisodeThumb(anime, ep);
         html.push(`
           <div
             data-select-ep="${ep}"
+            id="epCardItem-${ep}"
             class="group p-2 rounded-xl flex items-center gap-3 cursor-pointer transition-all ${isCurrent ? 'kage-pill border border-white/25' : 'hover:bg-white/[0.05] border border-transparent'}"
           >
             <div class="relative w-20 h-12 rounded-lg overflow-hidden shrink-0 bg-black">
-              <img src="${thumbUrl}" onerror="this.onerror=null;this.src='${fallback}';" alt="" class="w-full h-full object-cover opacity-80" />
-              <span class="absolute top-1 left-1 px-1.5 py-0.2 rounded bg-black/80 text-[9px] font-bold text-white tabular-nums" style="color:#ffffff !important;">EP ${ep}</span>
+              <img src="${thumbUrl}" onerror="this.onerror=null;this.src='${fallback}';" alt="" class="w-full h-full object-cover opacity-85" loading="lazy" />
+              <span class="absolute top-1 left-1 px-1.5 py-0.2 rounded bg-black/85 text-[9px] font-bold text-white tabular-nums" style="color:#ffffff !important;">EP ${ep}</span>
               ${isCurrent ? `
                 <div class="absolute bottom-1 right-1.5 flex items-end gap-0.5 h-3.5">
                   <span class="w-1 bg-[#22c55e] rounded-full eq-bar-1"></span>
@@ -3689,20 +4058,35 @@
               <div class="text-xs font-semibold ${isCurrent ? 'text-white' : 'text-neutral-200 group-hover:text-white'} truncate" title="EP ${ep}: ${epTitle}">${epTitle}</div>
               <div class="flex items-center gap-1.5 mt-1 text-[10px] text-neutral-400 tabular-nums">
                 <span class="px-1.5 py-0.5 rounded bg-white/10 text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.cc}<span>Sub</span></span>
-                ${state.activeAnime.dub >= ep ? `<span class="px-1.5 py-0.5 rounded bg-white/10 text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.mic}<span>Dub</span></span>` : ''}
+                ${totalDub >= ep ? `<span class="px-1.5 py-0.5 rounded bg-white/10 text-neutral-200 flex items-center gap-1">${LINEAR_ICONS.mic}<span>Dub</span></span>` : ''}
                 <span>${epDurShort}</span>
               </div>
             </div>
           </div>
         `);
       }
+
+      if (!html.length) {
+        listEl.innerHTML = `<div class="p-6 text-center text-xs text-neutral-400">No episodes match "${filterText}".</div>`;
+        return;
+      }
+
+      const prevScroll = listEl.scrollTop;
       listEl.innerHTML = html.join('');
+      if (preserveScroll) {
+        listEl.scrollTop = prevScroll;
+      } else {
+        const activeCard = document.getElementById(`epCardItem-${state.activeEpisode}`);
+        if (activeCard) {
+          activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
     }
 
     // =========================================================================
-    // FULL 24-MINUTE EPISODE STREAMING ENGINE (ZERO 1:30 OPENING TRAILERS!)
+    // ANIVEXA 2.2.1 MULTI-PROVIDER STREAMING ENGINE (FROM USER'S ANITAG REPO)
+    // Supports: Anikoto, AnimeGG, AniBD, 2DHiVE, Mkissa, VidLink + Ad-Shield
     // =========================================================================
-    // Direct 24-Minute (24:01) Full-Length Anime Episode MP4 Streams (Internet Archive Public Domain / Archive Mirrors)
     const FULL_24MIN_ARCHIVE_EPISODES = [
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2052.mp4',
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2053.mp4',
@@ -3713,9 +4097,6 @@
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2058.mp4',
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2059.mp4',
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2060.mp4',
-      'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2061.mp4',
-      'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2062.mp4',
-      'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%2063.mp4',
       'https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-4/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20142.mp4'
     ];
 
@@ -3738,14 +4119,6 @@
     let hlsInstance = null;
     const streamCanvas = document.getElementById('animeStreamVisualizerCanvas');
     const streamCtx = streamCanvas ? streamCanvas.getContext('2d') : null;
-    const particles = Array.from({ length: 38 }, (_, i) => ({
-      x: (i * 97) % 960,
-      y: (i * 53) % 540,
-      vx: 1.2 + (i % 4) * 0.6,
-      vy: -0.8 - (i % 3) * 0.4,
-      r: 1.8 + (i % 4) * 1.1,
-      alpha: 0.25 + (i % 5) * 0.12
-    }));
 
     function renderLiveAnimeVisualizerFrame() {
       if (!streamCtx || !state.playerOpen) {
@@ -3768,13 +4141,22 @@
     let activeStreamQueue = [];
     let activeStreamIndex = 0;
     let streamStallTimeout = null;
-    state.activeServer = 'Koto';
+    state.activeServer = 'anikoto';
 
-    function setBufferingUI(isBuffering, statusText = 'Loading Full 24-Min Episode...') {
+    function setBufferingUI(isBuffering, statusText = 'Loading Ad-Free HD Stream...') {
       const overlay = document.getElementById('videoBufferingOverlay');
       const sub = document.getElementById('streamStatusSubtext');
       if (overlay) overlay.classList.toggle('hidden', !isBuffering);
       if (sub && statusText) sub.textContent = statusText;
+    }
+
+    function applyAdShieldToIframe(embedFrame) {
+      if (!embedFrame) return;
+      if (state.adShieldEnabled) {
+        embedFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-presentation');
+      } else {
+        embedFrame.removeAttribute('sandbox');
+      }
     }
 
     function safeStartVideoPlayback() {
@@ -3804,35 +4186,90 @@
       }
     }
 
-    function getFullEpisodeEmbedUrl(anime, episodeNum, serverName) {
+    function getFallbackEmbedSources(anime, episodeNum) {
       const ext = getAnimeExtras(anime);
-      const malId = ext.malId || 34572;
-      const anilistId = ext.anilistId || 97940;
+      const malId = state.activeSeasonMalId || ext.malId || 34572;
+      const anilistId = state.activeSeasonAnilistId || ext.anilistId || 97940;
       const subOrDub = state.audioMode === 'DUB' ? 'dub' : 'sub';
       const isDubNum = state.audioMode === 'DUB' ? 1 : 0;
       const slug = ANIME_CLOUD_SLUGS[anime.id] || anime.id;
       const dubSuffix = state.audioMode === 'DUB' ? '-dub' : '';
 
-      if (serverName === 'Miruro') {
-        return `https://vidlink.pro/anime/${malId}/${episodeNum}/${subOrDub}?fallback=true&autoplay=true&primaryColor=E8C36A`;
-      }
-      if (serverName === 'VidSrc') {
-        return `https://vidsrc.icu/embed/anime/${anilistId}/${episodeNum}/${isDubNum}`;
-      }
-      return `https://2anime.xyz/embed/${slug}${dubSuffix}-episode-${episodeNum}`;
+      return [
+        {
+          server: 'VidLink HD',
+          type: 'embed',
+          url: `https://vidlink.pro/anime/${malId}/${episodeNum}/${subOrDub}?fallback=true&autoplay=true&primaryColor=E8C36A`
+        },
+        {
+          server: 'VidSrc CC',
+          type: 'embed',
+          url: `https://vidsrc.cc/v2/embed/anime/ani${anilistId}/${episodeNum}/${subOrDub}`
+        },
+        {
+          server: 'VidSrc ICU',
+          type: 'embed',
+          url: `https://vidsrc.icu/embed/anime/${anilistId}/${episodeNum}/${isDubNum}`
+        },
+        {
+          server: '2Anime Cloud',
+          type: 'embed',
+          url: `https://2anime.xyz/embed/${slug}${dubSuffix}-episode-${episodeNum}`
+        }
+      ];
     }
 
-    function attachSourceAndPlay(streamUrl, isHls = false) {
+    function renderMirrorSelectorDropdown() {
+      const sel = document.getElementById('streamMirrorSelect');
+      if (!sel) return;
+      if (!activeStreamQueue || activeStreamQueue.length <= 1) {
+        sel.classList.add('hidden');
+        return;
+      }
+      sel.classList.remove('hidden');
+      sel.innerHTML = activeStreamQueue.map((item, idx) => {
+        const label = item.server || `Mirror #${idx + 1}`;
+        const kind = item.type === 'embed' ? 'Embed' : (item.isM3U8 ? 'HLS' : 'MP4');
+        return `<option value="${idx}" ${idx === activeStreamIndex ? 'selected' : ''} style="background:#141418;color:#fff;">${label} (${kind})</option>`;
+      }).join('');
+    }
+
+    function playStreamSourceObject(sourceObj) {
+      if (!sourceObj || !sourceObj.url) {
+        tryNextStreamInQueue();
+        return;
+      }
       clearTimeout(streamStallTimeout);
+      renderMirrorSelectorDropdown();
+
       const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+      const epTitle = getEpisodeTitle(state.activeAnime, state.activeEpisode);
+
+      // Case 1: Sandboxed Ad-Free Embed Stream (Anikoto StreamWish/FileMoon/VidHide, AnimeGG, 2DHiVE, VidLink)
+      if (sourceObj.type === 'embed') {
+        if (hlsInstance) {
+          hlsInstance.destroy();
+          hlsInstance = null;
+        }
+        nativeVideo.pause();
+        setBufferingUI(false);
+        if (embedFrame) {
+          applyAdShieldToIframe(embedFrame);
+          embedFrame.src = sourceObj.url;
+          embedFrame.classList.remove('hidden');
+        }
+        showToast(`Playing on ${sourceObj.server || state.activeServer.toUpperCase()} (Ad-Shield ON)`);
+        return;
+      }
+
+      // Case 2: Direct HLS (.m3u8) or MP4 Video Stream in Native Player
       if (embedFrame) {
         embedFrame.classList.add('hidden');
         embedFrame.src = 'about:blank';
       }
       nativeVideo.classList.remove('hidden');
 
-      const epTitle = getEpisodeTitle(state.activeAnime, state.activeEpisode);
-      setBufferingUI(true, `Streaming Full Episode ${state.activeEpisode}: ${epTitle}...`);
+      setBufferingUI(true, `Streaming EP ${state.activeEpisode} (${sourceObj.server || state.activeServer}): ${epTitle}...`);
       if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
@@ -3840,9 +4277,12 @@
       if (streamCanvas) streamCanvas.style.opacity = '0';
       if (backdropPosterImg) backdropPosterImg.style.opacity = '0';
 
+      const isHls = Boolean(sourceObj.isM3U8 || String(sourceObj.url).includes('.m3u8'));
+      const finalUrl = sourceObj.proxiedUrl || sourceObj.url;
+
       if (isHls && window.Hls && Hls.isSupported()) {
         hlsInstance = new Hls({ enableWorker: true });
-        hlsInstance.loadSource(streamUrl);
+        hlsInstance.loadSource(finalUrl);
         hlsInstance.attachMedia(nativeVideo);
         hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
           safeStartVideoPlayback();
@@ -3853,32 +4293,31 @@
           }
         });
       } else {
-        nativeVideo.src = streamUrl;
+        nativeVideo.src = finalUrl;
         nativeVideo.load();
         safeStartVideoPlayback();
       }
 
       streamStallTimeout = setTimeout(() => {
-        if (state.playerOpen && state.activeServer === 'Koto' && nativeVideo.readyState < 2) {
+        if (state.playerOpen && sourceObj.type !== 'embed' && nativeVideo.readyState < 2) {
           tryNextStreamInQueue();
         }
-      }, 9500);
+      }, 9000);
     }
 
     function tryNextStreamInQueue() {
       clearTimeout(streamStallTimeout);
       activeStreamIndex++;
       if (activeStreamIndex < activeStreamQueue.length) {
-        const nextUrl = activeStreamQueue[activeStreamIndex];
-        setBufferingUI(true, `Connecting to 24-Min Full Episode Mirror #${activeStreamIndex + 1}...`);
-        attachSourceAndPlay(nextUrl, nextUrl.includes('.m3u8'));
+        const nextSource = activeStreamQueue[activeStreamIndex];
+        setBufferingUI(true, `Switching to ${nextSource.server || 'Backup Mirror #' + (activeStreamIndex + 1)}...`);
+        playStreamSourceObject(nextSource);
       } else {
         setBufferingUI(false);
       }
     }
 
-    function build24MinStreamQueue(anime, episodeNum) {
-      // Pick verified 24:01 full-length MP4 episodes (never 90-second opening clips!)
+    function buildDirectMp4FallbackSources(anime, episodeNum) {
       let primaryMp4 = FULL_24MIN_ARCHIVE_EPISODES[(episodeNum - 1) % FULL_24MIN_ARCHIVE_EPISODES.length];
       if (anime.id === 'black-clover' && episodeNum >= 52 && episodeNum <= 102) {
         primaryMp4 = `https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`;
@@ -3887,60 +4326,73 @@
       } else if (anime.id === 'black-clover' && episodeNum >= 142 && episodeNum <= 170) {
         primaryMp4 = `https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-4/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`;
       }
-      const secondaryMp4 = FULL_24MIN_ARCHIVE_EPISODES[episodeNum % FULL_24MIN_ARCHIVE_EPISODES.length];
-      return [primaryMp4, secondaryMp4];
+      return [
+        { server: 'Archive 24m Direct MP4', type: 'video', isM3U8: false, url: primaryMp4 }
+      ];
     }
 
     async function loadBuiltInEpisodeStream(anime, episodeNum) {
+      if (!anime) return;
       nativeVideo.poster = getBannerUrl(anime);
       state.duration = 1441; // 24:01 standard full episode duration
       updateTimelineUI();
       state.isPlaying = true;
       syncPlayPauseIcons();
 
-      const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+      const ext = getAnimeExtras(anime);
+      const anilistId = state.activeSeasonAnilistId || ext.anilistId || 97940;
+      const malId = state.activeSeasonMalId || ext.malId || 34572;
+      const audioLower = state.audioMode.toLowerCase();
+      const provider = (state.activeServer || 'anikoto').toLowerCase();
 
-      // If user selected Miruro HD (VidLink 24m), VidSrc 24m, or 2Anime Cloud, load the exact anime's 24-minute episode player
-      if (state.activeServer === 'Miruro' || state.activeServer === 'VidSrc' || state.activeServer === 'CloudEmbed') {
-        clearTimeout(streamStallTimeout);
-        nativeVideo.pause();
-        setBufferingUI(false);
-        if (embedFrame) {
-          embedFrame.src = getFullEpisodeEmbedUrl(anime, episodeNum, state.activeServer);
-          embedFrame.classList.remove('hidden');
-        }
-        showToast(`${state.activeServer} • ${getTitle(anime)} EP ${episodeNum} (24m)`);
+      // If user explicitly picked VidLink HD cloud server, load VidLink immediately
+      if (provider === 'vidlink') {
+        activeStreamQueue = [
+          ...getFallbackEmbedSources(anime, episodeNum),
+          ...buildDirectMp4FallbackSources(anime, episodeNum)
+        ];
+        activeStreamIndex = 0;
+        playStreamSourceObject(activeStreamQueue[0]);
         return;
       }
 
-      if (embedFrame) {
-        embedFrame.classList.add('hidden');
-        embedFrame.src = 'about:blank';
-      }
+      setBufferingUI(true, `Resolving ${provider.toUpperCase()} Stream for ${getTitle(anime)} EP ${episodeNum}...`);
 
-      // Server 1 (Koto 24m): Immediately start verified 24-minute native MP4 playback synchronously
-      // so mobile Chrome/Safari preserves the user-gesture autoplay token without waiting on network fetches!
-      activeStreamQueue = build24MinStreamQueue(anime, episodeNum);
-      activeStreamIndex = 0;
-      attachSourceAndPlay(activeStreamQueue[0], activeStreamQueue[0].includes('.m3u8'));
+      const resolvedSources = [];
 
-      // Also resolve anime-specific stream via /api/stream in background as backup/upgrade
+      // 1. Query our integrated AniTAG-main Anivexa Backend (/api/stream + /watch/:provider/...)
       if (location.protocol.startsWith('http')) {
         try {
-          const ext = getAnimeExtras(anime);
-          const resp = await fetch(`/api/stream?animeId=${encodeURIComponent(anime.id)}&malId=${ext.malId || 0}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${state.audioMode.toLowerCase()}`);
+          const resp = await fetch(`/api/stream?provider=${encodeURIComponent(provider)}&animeId=${encodeURIComponent(anime.id)}&anilistId=${anilistId}&malId=${malId}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${audioLower}`);
           if (resp.ok) {
             const data = await resp.json();
-            if (data && data.url && !activeStreamQueue.includes(data.url)) {
-              activeStreamQueue.push(data.url);
-              // If the initial stream errored or stalled, immediately switch to resolved stream
-              if (nativeVideo.error || (nativeVideo.readyState === 0 && nativeVideo.networkState === 3)) {
-                attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
-              }
+            if (Array.isArray(data.sources) && data.sources.length) {
+              data.sources.forEach(s => {
+                if (s && s.url) resolvedSources.push(s);
+              });
+            } else if (data && data.url) {
+              resolvedSources.push({
+                server: data.provider || provider.toUpperCase(),
+                type: data.type || 'video',
+                isM3U8: Boolean(data.isM3U8 || String(data.url).includes('.m3u8')),
+                url: data.url
+              });
             }
           }
         } catch (e) {}
       }
+
+      // 2. Append Ad-Blocked Cloud Embeds & Direct 24m MP4 Mirrors so playback never fails even offline/serverless
+      const fallbackEmbeds = getFallbackEmbedSources(anime, episodeNum);
+      const fallbackMp4s = buildDirectMp4FallbackSources(anime, episodeNum);
+
+      activeStreamQueue = [
+        ...resolvedSources,
+        ...fallbackEmbeds,
+        ...fallbackMp4s
+      ];
+      activeStreamIndex = 0;
+      playStreamSourceObject(activeStreamQueue[0]);
     }
 
     function populateWatchPageDetails(anime, episodeNum) {
@@ -3998,11 +4450,29 @@
 
     function openAnimeInPlayer(animeId, episodeNum = 1, startTimeSec = 0) {
       const anime = ANIME_CATALOG.find(a => a.id === animeId) || ANIME_CATALOG[0];
+      const isNewAnime = !state.activeAnime || state.activeAnime.id !== anime.id;
       state.activeAnime = anime;
       state.activeEpisode = episodeNum;
       state.currentTime = startTimeSec;
       state.playerOpen = true;
       state.currentView = 'watch';
+
+      const ext = getAnimeExtras(anime);
+      if (isNewAnime) {
+        const multiSeasons = ANIME_SEASONS_MAP[anime.id];
+        if (multiSeasons && multiSeasons.length) {
+          // Default to matching anilistId or Season 1
+          const defSeason = multiSeasons.find(s => s.anilistId === ext.anilistId) || multiSeasons[0];
+          state.activeSeasonNum = defSeason.seasonNum;
+          state.activeSeasonAnilistId = defSeason.anilistId;
+          state.activeSeasonMalId = defSeason.malId;
+        } else {
+          state.activeSeasonNum = 1;
+          state.activeSeasonAnilistId = ext.anilistId || 0;
+          state.activeSeasonMalId = ext.malId || 0;
+        }
+      }
+      state.activeEpisodeChunk = Math.floor((Math.max(1, episodeNum) - 1) / 100);
 
       previewImgCache.src = getBannerUrl(anime);
 
@@ -4018,7 +4488,7 @@
       playerView.classList.add('blur-enter');
 
       populateWatchPageDetails(anime, episodeNum);
-      fetchRealEpisodesForAnime(anime);
+      fetchRealEpisodesForAnime(anime, state.activeEpisodeChunk);
       recordWatchProgress(anime.id, episodeNum, startTimeSec);
       loadBuiltInEpisodeStream(anime, episodeNum);
       setCaptionsEnabled(state.ccEnabled, true);
@@ -4103,7 +4573,9 @@
 
     function goPrevEpisode() {
       state.activeEpisode = Math.max(1, state.activeEpisode - 1);
+      state.activeEpisodeChunk = Math.floor((state.activeEpisode - 1) / 100);
       state.currentTime = 0;
+      fetchRealEpisodesForAnime(state.activeAnime, state.activeEpisodeChunk);
       recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
       loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
       document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
@@ -4116,7 +4588,9 @@
 
     function goNextEpisode() {
       state.activeEpisode = Math.min(state.activeAnime.total, state.activeEpisode + 1);
+      state.activeEpisodeChunk = Math.floor((state.activeEpisode - 1) / 100);
       state.currentTime = 0;
+      fetchRealEpisodesForAnime(state.activeAnime, state.activeEpisodeChunk);
       recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
       loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
       document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
@@ -4350,23 +4824,10 @@
     const searchResultsList = document.getElementById('searchResultsList');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
 
-    searchInput.addEventListener('input', () => {
-      const q = searchInput.value.trim().toLowerCase();
-      if (!q) {
-        searchDropdown.classList.add('hidden');
-        clearSearchBtn.classList.add('hidden');
-        return;
-      }
-      clearSearchBtn.classList.remove('hidden');
-      const matches = ANIME_CATALOG.filter(a =>
-        a.titleEn.toLowerCase().includes(q) ||
-        a.titleJp.toLowerCase().includes(q) ||
-        a.genres.some(g => g.toLowerCase().includes(q))
-      );
-
-      searchDropdown.classList.remove('hidden');
+    let liveSearchTimeout = null;
+    function renderSearchDropdownResults(matches, rawQuery) {
       if (!matches.length) {
-        searchResultsList.innerHTML = `<div class="p-3 text-xs text-neutral-400 text-center">No results for "${searchInput.value}"</div>`;
+        searchResultsList.innerHTML = `<div class="p-3 text-xs text-neutral-400 text-center">Searching AniTAG Cloud for "${rawQuery}"...</div>`;
       } else {
         searchResultsList.innerHTML = matches.map(anime => `
           <div data-search-pick="${anime.id}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 cursor-pointer transition-all">
@@ -4383,6 +4844,109 @@
             </div>
           </div>
         `).join('');
+      }
+    }
+
+    searchInput.addEventListener('input', () => {
+      const rawQ = searchInput.value.trim();
+      const q = rawQ.toLowerCase();
+      clearTimeout(liveSearchTimeout);
+      if (!q) {
+        searchDropdown.classList.add('hidden');
+        clearSearchBtn.classList.add('hidden');
+        return;
+      }
+      clearSearchBtn.classList.remove('hidden');
+      const localMatches = ANIME_CATALOG.filter(a =>
+        a.titleEn.toLowerCase().includes(q) ||
+        (a.titleJp && a.titleJp.toLowerCase().includes(q)) ||
+        a.genres.some(g => g.toLowerCase().includes(q))
+      );
+
+      searchDropdown.classList.remove('hidden');
+      renderSearchDropdownResults(localMatches, rawQ);
+
+      if (q.length >= 2) {
+        liveSearchTimeout = setTimeout(async () => {
+          try {
+            const gql = `query ($search: String) {
+              Page(page: 1, perPage: 8) {
+                media(search: $search, type: ANIME, isAdult: false, sort: POPULARITY_DESC) {
+                  id
+                  idMal
+                  title { english romaji native }
+                  seasonYear
+                  format
+                  averageScore
+                  episodes
+                  duration
+                  status
+                  genres
+                  description(asHtml: false)
+                  coverImage { extraLarge large }
+                  bannerImage
+                  studios(isMain: true) { nodes { name } }
+                }
+              }
+            }`;
+            const res = await fetch('https://graphql.anilist.co', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify({ query: gql, variables: { search: rawQ } })
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+            const mediaList = (json && json.data && json.data.Page && json.data.Page.media) || [];
+            mediaList.forEach(m => {
+              const existing = ANIME_CATALOG.find(a => (ANIME_META_EXTRAS[a.id] && ANIME_META_EXTRAS[a.id].anilistId === m.id));
+              if (!existing) {
+                const slugId = 'ani-' + m.id;
+                const totalEps = m.episodes || 12;
+                const newItem = {
+                  id: slugId,
+                  titleEn: m.title.english || m.title.romaji || 'Anime',
+                  titleJp: m.title.native || m.title.romaji || '',
+                  year: m.seasonYear || 2025,
+                  format: m.format || 'TV',
+                  score: m.averageScore ? Number((m.averageScore / 10).toFixed(1)) : 8.0,
+                  sub: totalEps,
+                  dub: totalEps,
+                  total: totalEps,
+                  views: 950,
+                  status: m.status === 'RELEASING' ? 'Airing' : 'Completed',
+                  trendingRank: 99,
+                  topCategory: ['all'],
+                  discoverTab: ['popular'],
+                  day: 'Sat',
+                  airTime: '21:00',
+                  genres: (m.genres || ['Action', 'Fantasy']).slice(0, 3),
+                  cover: (m.coverImage && (m.coverImage.extraLarge || m.coverImage.large)) || '',
+                  banner: m.bannerImage || '',
+                  synopsis: m.description ? m.description.replace(/<[^>]*>/g, '').trim() : 'Stream ad-free HD episodes on AniTAG.'
+                };
+                ANIME_CATALOG.push(newItem);
+                ANIME_META_EXTRAS[slugId] = {
+                  anilistId: m.id,
+                  malId: m.idMal || m.id,
+                  studio: (m.studios && m.studios.nodes && m.studios.nodes[0] && m.studios.nodes[0].name) || 'Animation Studio',
+                  duration: m.duration ? `${m.duration} min / ep` : '24 min / ep',
+                  season: `${m.seasonYear || 2025}`,
+                  palette: ['#c1442e', '#1e1b2e']
+                };
+              }
+            });
+            const updatedMatches = ANIME_CATALOG.filter(a =>
+              a.titleEn.toLowerCase().includes(q) ||
+              (a.titleJp && a.titleJp.toLowerCase().includes(q)) ||
+              a.genres.some(g => g.toLowerCase().includes(q))
+            );
+            if (!updatedMatches.length) {
+              searchResultsList.innerHTML = `<div class="p-3 text-xs text-neutral-400 text-center">No results for "${rawQ}"</div>`;
+            } else {
+              renderSearchDropdownResults(updatedMatches.slice(0, 10), rawQ);
+            }
+          } catch (e) {}
+        }, 280);
       }
     });
 
@@ -5039,18 +5603,56 @@
 
     document.querySelectorAll('.server-pill-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        state.activeServer = btn.dataset.server || 'Koto';
+        state.activeServer = btn.dataset.server || 'anikoto';
         document.querySelectorAll('.server-pill-btn').forEach(b => {
           b.className = b === btn
             ? 'server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5'
-            : 'server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5';
+            : 'server-pill-btn px-2.5 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1';
         });
         if (state.playerOpen) {
           loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
         }
-        showToast(`Streaming Server: ${state.activeServer}`);
+        showToast(`Streaming Server: ${state.activeServer.toUpperCase()}`);
       });
     });
+
+    const mirrorSelectEl = document.getElementById('streamMirrorSelect');
+    if (mirrorSelectEl) {
+      mirrorSelectEl.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.value, 10);
+        if (!isNaN(idx) && activeStreamQueue[idx]) {
+          activeStreamIndex = idx;
+          playStreamSourceObject(activeStreamQueue[idx]);
+        }
+      });
+    }
+
+    const adShieldBtn = document.getElementById('adShieldToggleBtn');
+    if (adShieldBtn) {
+      adShieldBtn.addEventListener('click', () => {
+        state.adShieldEnabled = !state.adShieldEnabled;
+        const txt = document.getElementById('adShieldStatusText');
+        if (txt) txt.textContent = state.adShieldEnabled ? 'Ad-Block ON' : 'Ad-Block OFF';
+        adShieldBtn.className = state.adShieldEnabled
+          ? 'px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold flex items-center gap-1 transition-all'
+          : 'px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-300 text-[11px] font-bold flex items-center gap-1 transition-all';
+        const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+        applyAdShieldToIframe(embedFrame);
+        showToast(state.adShieldEnabled ? 'Popup Ad-Blocker Shield Enabled' : 'Ad-Blocker Shield Relaxed');
+      });
+    }
+
+    const chunkDropdownEl = document.getElementById('episodeChunkSelectDropdown');
+    if (chunkDropdownEl) {
+      chunkDropdownEl.addEventListener('change', (e) => {
+        const chunkIdx = parseInt(e.target.value, 10);
+        if (!isNaN(chunkIdx)) {
+          state.activeEpisodeChunk = chunkIdx;
+          fetchRealEpisodesForAnime(state.activeAnime, chunkIdx);
+          renderPlayerEpisodes(document.getElementById('episodeFilterInput').value);
+        }
+      });
+    }
 
     // Live AniList GraphQL Hydration for Official Posters, Banners & Full Details
     async function hydrateCatalogFromAniList() {
@@ -5113,12 +5715,17 @@
           if (match.duration) {
             ext.duration = `${match.duration} min / ep`;
           }
-          if (match.streamingEpisodes && match.streamingEpisodes.length && !LIVE_EPISODE_CACHE[anime.id]) {
-            LIVE_EPISODE_CACHE[anime.id] = match.streamingEpisodes.map((se, idx) => ({
-              ep: idx + 1,
-              title: String(se.title || `Episode ${idx + 1}`).replace(/^Episode\s*\d+\s*[-:]\s*/i, '').trim() || `Episode ${idx + 1}`,
-              thumb: se.thumbnail || ''
-            }));
+          if (match.streamingEpisodes && match.streamingEpisodes.length) {
+            const cKey = `${anime.id}_${ext.anilistId}`;
+            match.streamingEpisodes.forEach((se) => {
+              const rawTitle = String(se.title || '');
+              const numMatch = rawTitle.match(/Episode\s*(\d+)/i);
+              if (numMatch && numMatch[1]) {
+                const realEpNum = parseInt(numMatch[1], 10);
+                const cleanTitle = rawTitle.replace(/^Episode\s*\d+\s*[-:]\s*/i, '').trim();
+                storeEpisodeInCache(cKey, realEpNum, cleanTitle, se.thumbnail || '');
+              }
+            });
           }
         });
 
@@ -5232,15 +5839,51 @@
         return;
       }
 
+      const seasonBtn = e.target.closest('[data-select-season]');
+      if (seasonBtn && state.activeAnime) {
+        const sNum = parseInt(seasonBtn.dataset.selectSeason, 10) || 1;
+        const seasons = getSeasonsForAnime(state.activeAnime);
+        const picked = seasons.find(s => s.seasonNum === sNum);
+        if (picked) {
+          state.activeSeasonNum = picked.seasonNum;
+          state.activeSeasonAnilistId = picked.anilistId;
+          state.activeSeasonMalId = picked.malId;
+          state.activeEpisode = 1;
+          state.activeEpisodeChunk = 0;
+          fetchRealEpisodesForAnime(state.activeAnime, 0);
+          loadBuiltInEpisodeStream(state.activeAnime, 1);
+          document.getElementById('playerEpisodePill').textContent = `S${picked.seasonNum} • EP 1 • ${state.audioMode}`;
+          document.getElementById('watchEpisodeHeading').textContent = `${getTitle(state.activeAnime)} (${picked.shortLabel}) — Episode 1: ${getEpisodeTitle(state.activeAnime, 1)}`;
+          renderPlayerEpisodes(document.getElementById('episodeFilterInput').value);
+          showToast(`Switched to ${picked.label}`);
+        }
+        return;
+      }
+
+      const chunkBtn = e.target.closest('[data-select-chunk]');
+      if (chunkBtn && state.activeAnime) {
+        const cIdx = parseInt(chunkBtn.dataset.selectChunk, 10);
+        if (!isNaN(cIdx)) {
+          state.activeEpisodeChunk = cIdx;
+          fetchRealEpisodesForAnime(state.activeAnime, cIdx);
+          renderPlayerEpisodes(document.getElementById('episodeFilterInput').value);
+          const cStart = cIdx * 100 + 1;
+          const cEnd = Math.min(state.activeAnime.total || 100, (cIdx + 1) * 100);
+          showToast(`Showing Episodes ${cStart}–${cEnd}`);
+        }
+        return;
+      }
+
       const epBtn = e.target.closest('[data-select-ep]');
       if (epBtn) {
         state.activeEpisode = parseInt(epBtn.dataset.selectEp, 10);
+        state.activeEpisodeChunk = Math.floor((state.activeEpisode - 1) / 100);
         state.currentTime = 0;
         recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
         loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
         document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
         document.getElementById('watchEpisodeHeading').textContent = `${getTitle(state.activeAnime)} — Episode ${state.activeEpisode}: ${getEpisodeTitle(state.activeAnime, state.activeEpisode)}`;
-        renderPlayerEpisodes(document.getElementById('episodeFilterInput').value);
+        renderPlayerEpisodes(document.getElementById('episodeFilterInput').value, true);
         updateTimelineUI();
         showToast(`Playing Episode ${state.activeEpisode}`);
         return;

@@ -1188,6 +1188,82 @@
           </div>
         </div>
 
+        <!-- SERVER NOTICE BANNER -->
+        <div id="serverNoticeBanner" class="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs">
+          <span>If the current server doesn't work, try another one from the Server menu.</span>
+          <button id="dismissNoticeBtn" class="text-amber-300 hover:text-amber-100 p-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- EPISODE HEADER & ACTION BAR (LINEAR ICONS ONLY) -->
+        <div class="space-y-3 pt-1">
+          <h1 id="watchEpisodeHeading" class="font-bold text-lg sm:text-xl text-white">Black Clover — Episode 1</h1>
+
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <img id="watchSeriesAvatar" src="https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97940-fyh8o7gNbha0.png" alt="" class="w-10 h-10 rounded-full object-cover border border-white/10" />
+              <div>
+                <div id="watchSeriesName" class="text-sm font-bold text-white">Black Clover</div>
+                <div class="text-[11px] text-neutral-400">44.9K users watching • Zero Ads</div>
+              </div>
+              <button id="watchAddToListBtn" class="ml-2 px-4 py-1.5 rounded-full accent-fill text-xs font-bold transition-all flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span id="watchAddToListText">In List</span>
+              </button>
+            </div>
+
+            <!-- Action Control Pills (Like/Dislike, Sub/Dub, Koto Server — Linear Icons) -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center kage-pill rounded-full overflow-hidden text-xs">
+                <button id="likeEpisodeBtn" class="px-3 py-1.5 hover:bg-white/10 flex items-center gap-1.5 text-neutral-200">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                  <span id="likeCountSpan" class="tabular-nums">142</span>
+                </button>
+                <div class="w-[1px] h-4 bg-white/10"></div>
+                <button id="dislikeEpisodeBtn" class="px-2.5 py-1.5 hover:bg-white/10 text-neutral-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+                </button>
+              </div>
+
+              <!-- Sub / Dub Audio Selector Pill (Linear Icons) -->
+              <div class="flex items-center kage-pill rounded-full p-0.5 text-xs">
+                <button data-audiopref="SUB" class="audio-pref-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="15" x2="18" y2="15"/></svg>
+                  <span>Sub</span>
+                </button>
+                <button data-audiopref="DUB" class="audio-pref-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                  <span>Dub</span>
+                </button>
+              </div>
+
+              <!-- Captions (CC) On / Off Quick Pill -->
+              <button id="watchBarCcToggleBtn" class="px-3 py-1.5 rounded-full accent-fill text-xs font-bold flex items-center gap-1.5 transition-all" title="Toggle Captions (CC) On or Off">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="15" x2="18" y2="15"/></svg>
+                <span id="watchBarCcText">CC: ON</span>
+              </button>
+
+              <!-- Server Selector Pill (Koto 24m / Miruro HD / VidLink 24m / 2Anime Cloud — Linear Server Icon) -->
+              <div class="flex flex-wrap items-center kage-pill rounded-full p-0.5 text-xs">
+                <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5" title="Direct 24-Min Full Episode Native Player (Server 1)">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <span>Koto 24m</span>
+                </button>
+                <button data-server="Miruro" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="Miruro / VidLink Full 24-Min Episode Stream (Server 2)">
+                  <span>Miruro HD</span>
+                </button>
+                <button data-server="VidSrc" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="VidSrc Full 24-Min Episode Stream (Server 3)">
+                  <span>VidSrc 24m</span>
+                </button>
+                <button data-server="CloudEmbed" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="2Anime Full 24-Min Episode Cloud Server (Server 4)">
+                  <span>2Anime Cloud</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- =============================================================== -->
         <!-- COLLAPSIBLE KEYBOARD & MOBILE ACTION DECK (HIDE / UNHIDE)       -->
         <!-- =============================================================== -->
@@ -1285,82 +1361,6 @@
               </span>
               <span class="font-semibold text-[11px]">Fullscreen</span>
             </button>
-          </div>
-        </div>
-
-        <!-- SERVER NOTICE BANNER -->
-        <div id="serverNoticeBanner" class="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs">
-          <span>If the current server doesn't work, try another one from the Server menu.</span>
-          <button id="dismissNoticeBtn" class="text-amber-300 hover:text-amber-100 p-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
-        <!-- EPISODE HEADER & ACTION BAR (LINEAR ICONS ONLY) -->
-        <div class="space-y-3 pt-1">
-          <h1 id="watchEpisodeHeading" class="font-bold text-lg sm:text-xl text-white">Black Clover — Episode 1</h1>
-
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <img id="watchSeriesAvatar" src="https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97940-fyh8o7gNbha0.png" alt="" class="w-10 h-10 rounded-full object-cover border border-white/10" />
-              <div>
-                <div id="watchSeriesName" class="text-sm font-bold text-white">Black Clover</div>
-                <div class="text-[11px] text-neutral-400">44.9K users watching • Zero Ads</div>
-              </div>
-              <button id="watchAddToListBtn" class="ml-2 px-4 py-1.5 rounded-full accent-fill text-xs font-bold transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                <span id="watchAddToListText">In List</span>
-              </button>
-            </div>
-
-            <!-- Action Control Pills (Like/Dislike, Sub/Dub, Koto Server — Linear Icons) -->
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="flex items-center kage-pill rounded-full overflow-hidden text-xs">
-                <button id="likeEpisodeBtn" class="px-3 py-1.5 hover:bg-white/10 flex items-center gap-1.5 text-neutral-200">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                  <span id="likeCountSpan" class="tabular-nums">142</span>
-                </button>
-                <div class="w-[1px] h-4 bg-white/10"></div>
-                <button id="dislikeEpisodeBtn" class="px-2.5 py-1.5 hover:bg-white/10 text-neutral-400">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
-                </button>
-              </div>
-
-              <!-- Sub / Dub Audio Selector Pill (Linear Icons) -->
-              <div class="flex items-center kage-pill rounded-full p-0.5 text-xs">
-                <button data-audiopref="SUB" class="audio-pref-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="15" x2="18" y2="15"/></svg>
-                  <span>Sub</span>
-                </button>
-                <button data-audiopref="DUB" class="audio-pref-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                  <span>Dub</span>
-                </button>
-              </div>
-
-              <!-- Captions (CC) On / Off Quick Pill -->
-              <button id="watchBarCcToggleBtn" class="px-3 py-1.5 rounded-full accent-fill text-xs font-bold flex items-center gap-1.5 transition-all" title="Toggle Captions (CC) On or Off">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="14" y2="11"/><line x1="6" y1="15" x2="18" y2="15"/></svg>
-                <span id="watchBarCcText">CC: ON</span>
-              </button>
-
-              <!-- Server Selector Pill (Koto 24m / Miruro HD / VidLink 24m / 2Anime Cloud — Linear Server Icon) -->
-              <div class="flex flex-wrap items-center kage-pill rounded-full p-0.5 text-xs">
-                <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5" title="Direct 24-Min Full Episode Native Player (Server 1)">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  <span>Koto 24m</span>
-                </button>
-                <button data-server="Miruro" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="Miruro / VidLink Full 24-Min Episode Stream (Server 2)">
-                  <span>Miruro HD</span>
-                </button>
-                <button data-server="VidSrc" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="VidSrc Full 24-Min Episode Stream (Server 3)">
-                  <span>VidSrc 24m</span>
-                </button>
-                <button data-server="CloudEmbed" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="2Anime Full 24-Min Episode Cloud Server (Server 4)">
-                  <span>2Anime Cloud</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -3121,7 +3121,6 @@
         `;
       }).join('');
 
-      if (grid) grid.innerHTML = cardsHtml;
       if (savedGrid) savedGrid.innerHTML = cardsHtml;
     }
 
@@ -3919,27 +3918,29 @@
         embedFrame.src = 'about:blank';
       }
 
-      // Server 1 (Koto 24m): Start 24-minute native playback + query /api/stream (AllAnime clock.json 24-min episode resolver)
+      // Server 1 (Koto 24m): Immediately start verified 24-minute native MP4 playback synchronously
+      // so mobile Chrome/Safari preserves the user-gesture autoplay token without waiting on network fetches!
       activeStreamQueue = build24MinStreamQueue(anime, episodeNum);
       activeStreamIndex = 0;
+      attachSourceAndPlay(activeStreamQueue[0], activeStreamQueue[0].includes('.m3u8'));
 
+      // Also resolve anime-specific stream via /api/stream in background as backup/upgrade
       if (location.protocol.startsWith('http')) {
-        setBufferingUI(true, `Resolving ${getTitle(anime)} • Episode ${episodeNum} (24 min)...`);
         try {
           const ext = getAnimeExtras(anime);
           const resp = await fetch(`/api/stream?animeId=${encodeURIComponent(anime.id)}&malId=${ext.malId || 0}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${state.audioMode.toLowerCase()}`);
           if (resp.ok) {
             const data = await resp.json();
-            if (data && data.url) {
-              activeStreamQueue.unshift(data.url);
-              attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
-              return;
+            if (data && data.url && !activeStreamQueue.includes(data.url)) {
+              activeStreamQueue.push(data.url);
+              // If the initial stream errored or stalled, immediately switch to resolved stream
+              if (nativeVideo.error || (nativeVideo.readyState === 0 && nativeVideo.networkState === 3)) {
+                attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
+              }
             }
           }
         } catch (e) {}
       }
-
-      attachSourceAndPlay(activeStreamQueue[0], activeStreamQueue[0].includes('.m3u8'));
     }
 
     function populateWatchPageDetails(anime, episodeNum) {

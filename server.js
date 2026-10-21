@@ -289,6 +289,7 @@ async function handleRequest(req, res) {
       // 1. Try AllAnime GraphQL Episode Resolver
       const allAnimeHit = await resolveAllAnimeEpisode(title, ep, audio);
       if (allAnimeHit && allAnimeHit.url) {
+        const directMp4 = !allAnimeHit.isM3U8 && allAnimeHit.url.startsWith('https://');
         return sendJson(res, 200, {
           status: 'ok',
           provider: 'allanime',
@@ -296,7 +297,7 @@ async function handleRequest(req, res) {
           episode: ep,
           audio,
           isM3U8: Boolean(allAnimeHit.isM3U8),
-          url: '/api/proxy?url=' + encodeURIComponent(allAnimeHit.url)
+          url: directMp4 ? allAnimeHit.url : ('/api/proxy?url=' + encodeURIComponent(allAnimeHit.url))
         });
       }
 
@@ -392,8 +393,12 @@ async function handleRequest(req, res) {
       const contentLen = upstream.headers.get('content-length');
       if (contentLen) outHeaders['Content-Length'] = contentLen;
 
-      const buf = Buffer.from(await upstream.arrayBuffer());
       res.writeHead(upstream.status, outHeaders);
+      if (upstream.body && typeof upstream.body.getReader === "function") {
+        const { Readable } = require("stream");
+        return Readable.fromWeb(upstream.body).pipe(res);
+      }
+      const buf = Buffer.from(await upstream.arrayBuffer());
       return res.end(buf);
     }
 

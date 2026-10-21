@@ -1,22 +1,9 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "index.html",
-          "anikage_app.html",
-          "manifest.json",
-          "sw.js",
-          "icon.svg",
-          "public/**"
-        ]
-      }
+      "source": "/(.*)",
+      "destination": "/server.js"
     }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/server.js" }
   ]
 }

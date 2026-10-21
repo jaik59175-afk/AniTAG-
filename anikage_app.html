@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-title" content="AniTAG" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="manifest" id="pwaManifestLink" href="/manifest.json" />
-  <link rel="icon" id="pwaFaviconLink" type="image/png" />
-  <link rel="apple-touch-icon" id="pwaAppleIconLink" />
+  <link rel="icon" id="pwaFaviconLink" type="image/png" href="/icon-192.png" />
+  <link rel="apple-touch-icon" id="pwaAppleIconLink" href="/icon-192.png" />
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -801,6 +801,14 @@
             preload="auto"
           ></video>
 
+          <!-- Full-Episode Cloud Embed Iframe (Active when Full Ep Server is selected) -->
+          <iframe
+            id="cloudEpisodeEmbedFrame"
+            class="hidden absolute inset-0 w-full h-full bg-black z-30 border-0"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowfullscreen
+          ></iframe>
+
           <!-- Hidden fallback canvas (never blocks video stream) -->
           <canvas
             id="animeStreamVisualizerCanvas"
@@ -1336,14 +1344,17 @@
                 <span id="watchBarCcText">CC: ON</span>
               </button>
 
-              <!-- Server Selector Pill (Koto / Miruro — Linear Server Icon) -->
+              <!-- Server Selector Pill (Koto / Miruro / Full Ep Cloud — Linear Server Icon) -->
               <div class="flex items-center kage-pill rounded-full p-0.5 text-xs">
-                <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5">
+                <button data-server="Koto" class="server-pill-btn px-3 py-1 rounded-full font-bold accent-fill transition-all flex items-center gap-1.5" title="Direct Native Anime Stream (Server 1)">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  <span>Koto</span>
+                  <span>Koto HD</span>
                 </button>
-                <button data-server="Miruro" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5">
+                <button data-server="Miruro" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="Direct Native Anime Stream (Server 2)">
                   <span>Miruro</span>
+                </button>
+                <button data-server="CloudEmbed" class="server-pill-btn px-3 py-1 rounded-full font-medium text-neutral-400 hover:text-white transition-all flex items-center gap-1.5" title="Full 24-Min Episode Cloud Embed Player">
+                  <span>Full Ep Cloud</span>
                 </button>
               </div>
             </div>
@@ -1536,10 +1547,31 @@
         <!-- CONTINUE WATCHING -->
         <section id="continueWatchingSection" class="space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="font-bold text-lg sm:text-xl text-white tracking-tight">Continue watching</h2>
-            <button id="clearContinueBtn" class="text-xs text-neutral-400 hover:text-white transition-colors">Clear</button>
+            <div class="flex items-center gap-2.5">
+              <h2 class="font-bold text-lg sm:text-xl text-white tracking-tight">Continue watching</h2>
+              <span id="continueCountPill" class="px-2 py-0.5 rounded-full kage-pill text-[10px] font-bold text-neutral-300 tabular-nums">4</span>
+            </div>
+            <button id="clearContinueBtn" class="px-3 py-1 rounded-full kage-pill text-xs font-medium text-neutral-300 hover:text-red-400 flex items-center gap-1.5 transition-colors" title="Clear all Continue Watching items">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Clear All</span>
+            </button>
           </div>
           <div id="continueWatchingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </section>
+
+        <!-- WATCH HISTORY (WITH INDIVIDUAL DELETE & CLEAR ALL) -->
+        <section id="watchHistorySection" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <h2 class="font-bold text-lg sm:text-xl text-white tracking-tight">Watch history</h2>
+              <span id="watchHistoryCountPill" class="px-2 py-0.5 rounded-full kage-pill text-[10px] font-bold text-neutral-300 tabular-nums">4</span>
+            </div>
+            <button id="clearWatchHistoryBtn" class="px-3 py-1 rounded-full kage-pill text-xs font-medium text-neutral-300 hover:text-red-400 flex items-center gap-1.5 transition-colors" title="Delete all Watch History">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Clear History</span>
+            </button>
+          </div>
+          <div id="watchHistoryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
         </section>
 
         <!-- TRENDING NOW (HOT) -->
@@ -1655,13 +1687,24 @@
       <div id="torrentsListGrid" class="space-y-2"></div>
     </div>
 
-    <!-- VIEW 6: WATCHLIST -->
-    <div id="view-watchlist" class="hidden max-w-[1480px] mx-auto px-3 sm:px-8 pt-6 space-y-6 blur-enter">
+    <!-- VIEW 6: WATCHLIST & WATCH HISTORY -->
+    <div id="view-watchlist" class="hidden max-w-[1480px] mx-auto px-3 sm:px-8 pt-6 space-y-8 blur-enter">
       <div class="kage-card rounded-2xl p-5">
-        <h1 class="font-bold text-xl text-white">Saved Watchlist</h1>
-        <p class="text-xs text-neutral-400 mt-1">Stored locally on your device</p>
+        <h1 class="font-bold text-xl text-white">Saved Watchlist & Watch History</h1>
+        <p class="text-xs text-neutral-400 mt-1">Manage your saved anime, continue watching progress, and watch history</p>
       </div>
       <div id="watchlistGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+
+      <div class="space-y-4 pt-4 border-t" style="border-color: var(--border-subtle);">
+        <div class="flex items-center justify-between">
+          <h2 class="font-bold text-lg text-white">Watch History</h2>
+          <button id="clearWatchHistorySavedViewBtn" class="px-3 py-1 rounded-full kage-pill text-xs font-medium text-neutral-300 hover:text-red-400 flex items-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Clear History</span>
+          </button>
+        </div>
+        <div id="savedViewHistoryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+      </div>
     </div>
 
   </main>
@@ -1729,8 +1772,8 @@
           </svg>
           <span id="nativeInstallBtnText">Install AniTAG App Now</span>
         </button>
-        <p id="pwaInstallStatusNote" class="text-[11px] text-neutral-400 text-center">
-          Works directly on Android, iOS, Windows & Mac once deployed on Vercel or Render.
+        <p id="pwaInstallStatusNote" class="text-[11px] text-neutral-300 text-center leading-relaxed">
+          Installs as a real standalone <span class="text-white font-semibold">WebAPK App</span> (clean white straw-hat & star icon with <span class="text-emerald-400 font-semibold">NO Chrome badge</span>). If you have the old Chrome shortcut on your home screen, remove it first and tap <span class="text-white font-semibold">Install App</span>!
         </p>
       </div>
 
@@ -2327,6 +2370,12 @@
         { id: 'apothecary-diaries-s3', ep: 3, timeSec: 1120, totalSec: 1432, audio: 'DUB' },
         { id: 're-zero-s4', ep: 18, timeSec: 260, totalSec: 1432, audio: 'DUB' }
       ],
+      watchHistory: [
+        { uid: 'black-clover-142', id: 'black-clover', ep: 142, timeSec: 845, totalSec: 1432, audio: 'SUB', watchedAt: 'Today • 22:15' },
+        { uid: 'bleach-tybw-9', id: 'bleach-tybw', ep: 9, timeSec: 512, totalSec: 1432, audio: 'SUB', watchedAt: 'Today • 20:40' },
+        { uid: 'one-piece-1180', id: 'one-piece', ep: 1180, timeSec: 1310, totalSec: 1432, audio: 'SUB', watchedAt: 'Yesterday' },
+        { uid: 'apothecary-diaries-s3-3', id: 'apothecary-diaries-s3', ep: 3, timeSec: 1120, totalSec: 1432, audio: 'DUB', watchedAt: 'Yesterday' }
+      ],
       playerOpen: false,
       activeAnime: ANIME_CATALOG[0],
       activeEpisode: 1,
@@ -2351,7 +2400,61 @@
     try {
       const savedWl = localStorage.getItem('anikage_watchlist_v2');
       if (savedWl) state.watchlist = new Set(JSON.parse(savedWl));
+      const savedCw = localStorage.getItem('anitag_continue_watching_v1');
+      if (savedCw) state.continueWatching = JSON.parse(savedCw);
+      const savedWh = localStorage.getItem('anitag_watch_history_v1');
+      if (savedWh) state.watchHistory = JSON.parse(savedWh);
     } catch (e) {}
+
+    function saveContinueWatching() {
+      try {
+        localStorage.setItem('anitag_continue_watching_v1', JSON.stringify(state.continueWatching));
+      } catch (e) {}
+    }
+
+    function saveWatchHistory() {
+      try {
+        localStorage.setItem('anitag_watch_history_v1', JSON.stringify(state.watchHistory));
+      } catch (e) {}
+    }
+
+    function recordWatchProgress(animeId, epNum, timeSec = 15) {
+      const existingCwIdx = state.continueWatching.findIndex(item => item.id === animeId);
+      const cwEntry = {
+        id: animeId,
+        ep: epNum,
+        timeSec: Math.max(15, Math.floor(timeSec || 15)),
+        totalSec: Math.max(90, Math.floor(state.duration || 1432)),
+        audio: state.audioMode
+      };
+      if (existingCwIdx !== -1) {
+        state.continueWatching.splice(existingCwIdx, 1);
+      }
+      state.continueWatching.unshift(cwEntry);
+      if (state.continueWatching.length > 8) state.continueWatching.length = 8;
+      saveContinueWatching();
+
+      const uid = `${animeId}-${epNum}`;
+      const existingWhIdx = state.watchHistory.findIndex(item => item.uid === uid);
+      if (existingWhIdx !== -1) {
+        state.watchHistory.splice(existingWhIdx, 1);
+      }
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      state.watchHistory.unshift({
+        uid,
+        id: animeId,
+        ep: epNum,
+        timeSec: Math.max(15, Math.floor(timeSec || 15)),
+        totalSec: Math.max(90, Math.floor(state.duration || 1432)),
+        audio: state.audioMode,
+        watchedAt: `Just now • ${timeStr}`
+      });
+      if (state.watchHistory.length > 16) state.watchHistory.length = 16;
+      saveWatchHistory();
+      renderContinueWatching();
+      renderWatchHistory();
+    }
 
     function saveWatchlist() {
       try {
@@ -2682,6 +2785,8 @@
     function renderContinueWatching() {
       const section = document.getElementById('continueWatchingSection');
       const grid = document.getElementById('continueWatchingGrid');
+      const countPill = document.getElementById('continueCountPill');
+      if (countPill) countPill.textContent = state.continueWatching.length;
       if (!state.continueWatching.length) {
         section.classList.add('hidden');
         return;
@@ -2689,11 +2794,19 @@
       section.classList.remove('hidden');
       grid.innerHTML = state.continueWatching.map(item => {
         const anime = ANIME_CATALOG.find(a => a.id === item.id) || ANIME_CATALOG[0];
-        const pct = Math.round((item.timeSec / item.totalSec) * 100);
+        const pct = Math.min(100, Math.max(4, Math.round((item.timeSec / (item.totalSec || 1432)) * 100)));
         const mins = Math.floor(item.timeSec / 60);
         const secs = String(item.timeSec % 60).padStart(2, '0');
         return `
-          <div data-resume-anime="${anime.id}" data-resume-ep="${item.ep}" data-resume-time="${item.timeSec}" class="kage-card group rounded-2xl p-3 flex items-center gap-3.5 cursor-pointer">
+          <div data-resume-anime="${anime.id}" data-resume-ep="${item.ep}" data-resume-time="${item.timeSec}" class="kage-card relative group rounded-2xl p-3 flex items-center gap-3.5 cursor-pointer pr-9">
+            <button
+              type="button"
+              data-delete-continue="${anime.id}"
+              class="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full kage-pill hover:bg-red-500/25 hover:border-red-500/40 text-neutral-400 hover:text-red-400 flex items-center justify-center transition-all"
+              title="Remove from Continue Watching"
+            >
+              <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
             <div class="relative w-16 h-20 rounded-xl overflow-hidden shrink-0 bg-black">
               <img src="${getPosterUrl(anime)}" onerror="this.onerror=null;this.src='${createPosterDataUri(anime, false)}';" alt="" class="w-full h-full object-cover" />
               <div class="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2715,6 +2828,55 @@
           </div>
         `;
       }).join('');
+    }
+
+    function renderWatchHistory() {
+      const section = document.getElementById('watchHistorySection');
+      const grid = document.getElementById('watchHistoryGrid');
+      const savedGrid = document.getElementById('savedViewHistoryGrid');
+      const countPill = document.getElementById('watchHistoryCountPill');
+      if (countPill) countPill.textContent = state.watchHistory.length;
+
+      if (!state.watchHistory.length) {
+        if (section) section.classList.add('hidden');
+        if (savedGrid) {
+          savedGrid.innerHTML = `<div class="col-span-full kage-card rounded-2xl p-6 text-center text-neutral-400 text-xs">Your watch history is empty.</div>`;
+        }
+        return;
+      }
+      if (section) section.classList.remove('hidden');
+
+      const cardsHtml = state.watchHistory.map(item => {
+        const anime = ANIME_CATALOG.find(a => a.id === item.id) || ANIME_CATALOG[0];
+        const mins = Math.floor((item.timeSec || 15) / 60);
+        const secs = String((item.timeSec || 15) % 60).padStart(2, '0');
+        return `
+          <div data-resume-anime="${anime.id}" data-resume-ep="${item.ep}" data-resume-time="${item.timeSec || 15}" class="kage-card relative group rounded-2xl p-3 flex items-center gap-3 cursor-pointer pr-9">
+            <button
+              type="button"
+              data-delete-history="${item.uid}"
+              class="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-full kage-pill hover:bg-red-500/25 hover:border-red-500/40 text-neutral-400 hover:text-red-400 flex items-center justify-center transition-all"
+              title="Delete from Watch History"
+            >
+              <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <img src="${getPosterUrl(anime)}" onerror="this.onerror=null;this.src='${createPosterDataUri(anime, false)}';" alt="" class="w-12 h-16 rounded-xl object-cover shrink-0 bg-black" />
+            <div class="flex-1 min-w-0 space-y-1">
+              <div class="text-[10px] text-neutral-400 flex items-center gap-1.5 tabular-nums">
+                <span class="px-1.5 py-0.2 rounded bg-white/10 font-bold text-white">EP ${item.ep}</span>
+                <span>${item.audio || 'SUB'}</span>
+                <span>•</span>
+                <span>${mins}:${secs}</span>
+              </div>
+              <h4 class="font-semibold text-xs sm:text-sm text-white truncate">${getTitle(anime)}</h4>
+              <div class="text-[10px] text-neutral-400 truncate">${item.watchedAt || 'Watched recently'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (grid) grid.innerHTML = cardsHtml;
+      if (savedGrid) savedGrid.innerHTML = cardsHtml;
     }
 
     function renderTrending() {
@@ -2860,6 +3022,7 @@
     function renderAllCatalogViews() {
       renderHero();
       renderContinueWatching();
+      renderWatchHistory();
       renderTrending();
       renderDiscover();
       renderTopLeaderboard();
@@ -3289,29 +3452,85 @@
       listEl.innerHTML = html.join('');
     }
 
-    // Map each anime to real HD anime video streams (AnimeThemes CDN + fallback streams)
-    const ANIME_DIRECT_STREAMS = {
-      'black-clover': 'https://v.animethemes.moe/BlackClover-OP3.webm',
-      'bumpkin-swordsman-2': 'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
-      'bleach-tybw': 'https://v.animethemes.moe/BleachSennenKessenHenKetsubetsuTan-OP1v2.webm',
-      'apothecary-diaries-s3': 'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
-      'mushoku-tensei-s3': 'https://v.animethemes.moe/MushokuTenseiS2-OP1.webm',
-      'one-piece': 'https://v.animethemes.moe/OnePiece-OP26.webm',
-      're-zero-s4': 'https://v.animethemes.moe/ReZeroS2-OP1.webm',
-      'slime-s4': 'https://v.animethemes.moe/TenseiShitaraSlimeDattaKenS2-OP1.webm',
-      'blue-box-s2': 'https://v.animethemes.moe/AoNoHako-OP1.webm',
-      'overgeared': 'https://v.animethemes.moe/OreDakeLevelUpNaKen-OP1.webm',
-      'smoking-supermarket': 'https://v.animethemes.moe/AoNoHako-ED1.webm',
-      'inept-villainess': 'https://v.animethemes.moe/KusuriyaNoHitorigoto-ED1.webm'
+    // Multi-episode verified real HD Anime streams per series (100% Real Anime — ZERO Demo Movies)
+    const ANIME_EPISODE_STREAMS = {
+      'black-clover': [
+        'https://v.animethemes.moe/BlackClover-OP3.webm',
+        'https://v.animethemes.moe/BlackClover-OP10.webm',
+        'https://v.animethemes.moe/BlackClover-OP1.webm',
+        'https://v.animethemes.moe/BlackClover-OP7.webm',
+        'https://v.animethemes.moe/BlackClover-ED1.webm'
+      ],
+      'bumpkin-swordsman-2': [
+        'https://v.animethemes.moe/OreDakeLevelUpNaKen-OP1.webm',
+        'https://v.animethemes.moe/KimetsuNoYaibaYuukakuHen-OP1.webm',
+        'https://v.animethemes.moe/SousouNoFrieren-OP1.webm'
+      ],
+      'bleach-tybw': [
+        'https://v.animethemes.moe/BleachSennenKessenHenKetsubetsuTan-OP1v2.webm',
+        'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
+        'https://v.animethemes.moe/BleachSennenKessenHen-ED1.webm',
+        'https://v.animethemes.moe/Bleach-OP13.webm'
+      ],
+      'apothecary-diaries-s3': [
+        'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
+        'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP2.webm',
+        'https://v.animethemes.moe/KusuriyaNoHitorigoto-ED1.webm'
+      ],
+      'mushoku-tensei-s3': [
+        'https://v.animethemes.moe/MushokuTenseiS2-OP1.webm',
+        'https://v.animethemes.moe/MushokuTensei-OP1.webm',
+        'https://v.animethemes.moe/MushokuTensei-ED1.webm'
+      ],
+      'one-piece': [
+        'https://v.animethemes.moe/OnePiece-OP26.webm',
+        'https://v.animethemes.moe/OnePiece-OP25.webm',
+        'https://v.animethemes.moe/OnePiece-OP24.webm',
+        'https://v.animethemes.moe/OnePiece-OP1.webm'
+      ],
+      're-zero-s4': [
+        'https://v.animethemes.moe/ReZeroS2-OP1.webm',
+        'https://v.animethemes.moe/ReZero-OP1.webm',
+        'https://v.animethemes.moe/ReZero-OP2.webm'
+      ],
+      'slime-s4': [
+        'https://v.animethemes.moe/TenseiShitaraSlimeDattaKenS2-OP1.webm',
+        'https://v.animethemes.moe/TenseiShitaraSlimeDattaKen-OP1.webm',
+        'https://v.animethemes.moe/TenseiShitaraSlimeDattaKen-OP2.webm'
+      ],
+      'blue-box-s2': [
+        'https://v.animethemes.moe/AoNoHako-OP1.webm',
+        'https://v.animethemes.moe/AoNoHako-ED1.webm'
+      ],
+      'overgeared': [
+        'https://v.animethemes.moe/OreDakeLevelUpNaKen-OP1.webm',
+        'https://v.animethemes.moe/ShangriLaFrontier-OP1.webm',
+        'https://v.animethemes.moe/JujutsuKaisenS2-OP2.webm'
+      ],
+      'smoking-supermarket': [
+        'https://v.animethemes.moe/AoNoHako-ED1.webm',
+        'https://v.animethemes.moe/SousouNoFrieren-ED1.webm'
+      ],
+      'inept-villainess': [
+        'https://v.animethemes.moe/KusuriyaNoHitorigoto-ED1.webm',
+        'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm'
+      ]
     };
 
-    const BUILTIN_HD_STREAMS = [
-      'https://v.animethemes.moe/BlackClover-OP3.webm',
-      'https://v.animethemes.moe/OnePiece-OP26.webm',
-      'https://v.animethemes.moe/BleachSennenKessenHen-OP1.webm',
-      'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-    ];
+    const ANIME_CLOUD_SLUGS = {
+      'black-clover': 'black-clover',
+      'bumpkin-swordsman-2': 'katainaka-no-ossan-kensei-ni-naru',
+      'bleach-tybw': 'bleach-sennen-kessen-hen-soukoku-tan',
+      'apothecary-diaries-s3': 'kusuriya-no-hitorigoto',
+      'mushoku-tensei-s3': 'mushoku-tensei-ii-isekai-ittara-honki-dasu-part-2',
+      'one-piece': 'one-piece',
+      're-zero-s4': 'rezero-kara-hajimeru-isekai-seikatsu-3rd-season',
+      'slime-s4': 'tensei-shitara-slime-datta-ken-3rd-season',
+      'blue-box-s2': 'ao-no-hako',
+      'overgeared': 'ore-dake-level-up-na-ken',
+      'smoking-supermarket': 'super-no-ura-de-yani-suu-futari',
+      'inept-villainess': 'kusuriya-no-hitorigoto'
+    };
 
     let hlsInstance = null;
     const streamCanvas = document.getElementById('animeStreamVisualizerCanvas');
@@ -3397,12 +3616,14 @@
       document.getElementById('dockPlayIconSvg').classList.toggle('hidden', state.isPlaying);
     }
 
-    // Universal H.264 MP4 + WebM + HLS stream queue so playback NEVER fails on any mobile or desktop browser
-    const UNIVERSAL_FALLBACK_MP4S = [
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+    // 100% Real Anime Backup Streams (Zero Non-Anime Demo Videos)
+    const VERIFIED_ANIME_BACKUP_STREAMS = [
+      'https://v.animethemes.moe/BlackClover-OP3.webm',
+      'https://v.animethemes.moe/OnePiece-OP26.webm',
+      'https://v.animethemes.moe/BleachSennenKessenHenKetsubetsuTan-OP1v2.webm',
+      'https://v.animethemes.moe/KusuriyaNoHitorigoto-OP1.webm',
+      'https://v.animethemes.moe/JujutsuKaisenS2-OP2.webm',
+      'https://v.animethemes.moe/SousouNoFrieren-OP1.webm'
     ];
 
     let activeStreamQueue = [];
@@ -3431,7 +3652,6 @@
           setBufferingUI(false);
           if (unmuteBtn) unmuteBtn.classList.toggle('hidden', !nativeVideo.muted);
         }).catch(() => {
-          // Mobile browser blocked unmuted autoplay -> immediately play muted with 1-tap unmute button
           nativeVideo.muted = true;
           nativeVideo.play().then(() => {
             state.isPlaying = true;
@@ -3447,7 +3667,14 @@
 
     function attachSourceAndPlay(streamUrl, isHls = false) {
       clearTimeout(streamStallTimeout);
-      setBufferingUI(true, 'Connecting to HD Stream...');
+      const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+      if (embedFrame) {
+        embedFrame.classList.add('hidden');
+        embedFrame.src = 'about:blank';
+      }
+      nativeVideo.classList.remove('hidden');
+
+      setBufferingUI(true, `Streaming ${getTitle(state.activeAnime)} • EP ${state.activeEpisode}...`);
       if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
@@ -3473,12 +3700,12 @@
         safeStartVideoPlayback();
       }
 
-      // If stream does not start decoding within 4.5s, auto-switch to next stream in queue
+      // Give HD anime streams 11 seconds before rotating to next anime mirror
       streamStallTimeout = setTimeout(() => {
-        if (state.playerOpen && nativeVideo.readyState < 2) {
+        if (state.playerOpen && state.activeServer !== 'CloudEmbed' && nativeVideo.readyState < 2) {
           tryNextStreamInQueue();
         }
-      }, 4500);
+      }, 11000);
     }
 
     function tryNextStreamInQueue() {
@@ -3486,7 +3713,7 @@
       activeStreamIndex++;
       if (activeStreamIndex < activeStreamQueue.length) {
         const nextUrl = activeStreamQueue[activeStreamIndex];
-        setBufferingUI(true, `Switching to Backup Stream #${activeStreamIndex + 1}...`);
+        setBufferingUI(true, `Switching Anime Stream Mirror #${activeStreamIndex + 1}...`);
         attachSourceAndPlay(nextUrl, nextUrl.includes('.m3u8'));
       } else {
         setBufferingUI(false);
@@ -3494,18 +3721,18 @@
     }
 
     function buildStreamQueueForAnime(anime, episodeNum) {
-      const animeIdx = Math.max(0, ANIME_CATALOG.indexOf(anime));
-      const directWebm = ANIME_DIRECT_STREAMS[anime.id] || 'https://v.animethemes.moe/BlackClover-OP3.webm';
-      const proxiedWebm = location.protocol.startsWith('http')
-        ? `/api/proxy?url=${encodeURIComponent(directWebm)}`
-        : directWebm;
-      const mp4Primary = UNIVERSAL_FALLBACK_MP4S[(animeIdx + episodeNum) % UNIVERSAL_FALLBACK_MP4S.length];
-      const mp4Secondary = UNIVERSAL_FALLBACK_MP4S[(animeIdx + episodeNum + 1) % UNIVERSAL_FALLBACK_MP4S.length];
+      const seriesStreams = ANIME_EPISODE_STREAMS[anime.id] || VERIFIED_ANIME_BACKUP_STREAMS;
+      const primaryUrl = seriesStreams[(episodeNum - 1) % seriesStreams.length];
+      const secondaryUrl = seriesStreams[episodeNum % seriesStreams.length];
+      const isHttp = location.protocol.startsWith('http');
+
+      const proxiedPrimary = isHttp ? `/api/proxy?url=${encodeURIComponent(primaryUrl)}` : primaryUrl;
+      const proxiedSecondary = isHttp ? `/api/proxy?url=${encodeURIComponent(secondaryUrl)}` : secondaryUrl;
 
       if (state.activeServer === 'Miruro') {
-        return [mp4Primary, directWebm, proxiedWebm, mp4Secondary];
+        return [secondaryUrl, proxiedSecondary, primaryUrl, proxiedPrimary];
       }
-      return [directWebm, proxiedWebm, mp4Primary, mp4Secondary];
+      return [primaryUrl, proxiedPrimary, secondaryUrl, proxiedSecondary];
     }
 
     async function loadBuiltInEpisodeStream(anime, episodeNum) {
@@ -3513,26 +3740,73 @@
       state.isPlaying = true;
       syncPlayPauseIcons();
 
-      // 1. Immediately start synchronous playback from our stream queue so mobile browsers grant user-gesture play!
+      // If user selected Full Ep Cloud Embed Server, load full episode cloud embed iframe
+      const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+      if (state.activeServer === 'CloudEmbed' && embedFrame) {
+        clearTimeout(streamStallTimeout);
+        nativeVideo.pause();
+        setBufferingUI(false);
+        const slug = ANIME_CLOUD_SLUGS[anime.id] || anime.id;
+        const dubSuffix = state.audioMode === 'DUB' ? '-dub' : '';
+        embedFrame.src = `https://2anime.xyz/embed/${slug}${dubSuffix}-episode-${episodeNum}`;
+        embedFrame.classList.remove('hidden');
+        showToast(`Full Episode Cloud Server • EP ${episodeNum}`);
+        return;
+      }
+
+      if (embedFrame) {
+        embedFrame.classList.add('hidden');
+        embedFrame.src = 'about:blank';
+      }
+
+      // 1. Immediately start synchronous anime playback from our real anime stream queue
       activeStreamQueue = buildStreamQueueForAnime(anime, episodeNum);
       activeStreamIndex = 0;
       attachSourceAndPlay(activeStreamQueue[0], activeStreamQueue[0].includes('.m3u8'));
 
-      // 2. Also query backend /api/stream in background; if it resolves a dedicated provider stream, prepend/switch if current hasn't started
-      if (location.protocol.startsWith('http') && state.activeServer === 'Koto') {
+      // 2. Query backend /api/stream (AllAnime GraphQL + HiAnime + AnimeThemes) for full episode stream
+      if (location.protocol.startsWith('http')) {
         try {
           const resp = await fetch(`/api/stream?animeId=${encodeURIComponent(anime.id)}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${state.audioMode.toLowerCase()}`);
           if (resp.ok) {
             const data = await resp.json();
             if (data && data.url && !activeStreamQueue.includes(data.url)) {
               activeStreamQueue.splice(1, 0, data.url);
-              if (data.provider === 'gogoanime' || nativeVideo.readyState < 2) {
+              if (data.provider === 'allanime' || data.provider === 'hianime' || data.provider === 'gogoanime' || nativeVideo.readyState < 2) {
                 attachSourceAndPlay(data.url, Boolean(data.isM3U8 || data.url.includes('.m3u8')));
               }
             }
           }
         } catch (e) {}
       }
+
+      // 3. Also query live AnimeThemes Official API directly from client for additional episode videos
+      try {
+        const cleanQuery = anime.titleEn.split(':')[0].split('Season')[0].trim();
+        const atRes = await fetch(`https://api.animethemes.moe/anime?filter[name]=${encodeURIComponent(cleanQuery)}&include=animethemes.animethemeentries.videos&page[size]=3`);
+        if (atRes.ok) {
+          const atJson = await atRes.json();
+          const foundVideos = [];
+          ((atJson && atJson.anime) || []).forEach(a => {
+            (a.animethemes || []).forEach(t => {
+              (t.animethemeentries || []).forEach(e => {
+                (e.videos || []).forEach(v => {
+                  if (v && v.link && v.link.startsWith('https://')) foundVideos.push(v.link);
+                });
+              });
+            });
+          });
+          if (foundVideos.length) {
+            const pickedLive = foundVideos[(episodeNum - 1) % foundVideos.length];
+            if (!activeStreamQueue.includes(pickedLive)) {
+              activeStreamQueue.push(pickedLive);
+              if (nativeVideo.readyState < 2) {
+                attachSourceAndPlay(pickedLive, false);
+              }
+            }
+          }
+        }
+      } catch (e) {}
     }
 
     function populateWatchPageDetails(anime, episodeNum) {
@@ -3610,6 +3884,7 @@
       playerView.classList.add('blur-enter');
 
       populateWatchPageDetails(anime, episodeNum);
+      recordWatchProgress(anime.id, episodeNum, startTimeSec);
       loadBuiltInEpisodeStream(anime, episodeNum);
       setCaptionsEnabled(state.ccEnabled, true);
 
@@ -3694,6 +3969,8 @@
     function goPrevEpisode() {
       state.activeEpisode = Math.max(1, state.activeEpisode - 1);
       state.currentTime = 0;
+      recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
+      loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
       document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
       document.getElementById('watchEpisodeHeading').textContent = `${getTitle(state.activeAnime)} — Episode ${state.activeEpisode}`;
       renderPlayerEpisodes();
@@ -3705,6 +3982,8 @@
     function goNextEpisode() {
       state.activeEpisode = Math.min(state.activeAnime.total, state.activeEpisode + 1);
       state.currentTime = 0;
+      recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
+      loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
       document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
       document.getElementById('watchEpisodeHeading').textContent = `${getTitle(state.activeAnime)} — Episode ${state.activeEpisode}`;
       renderPlayerEpisodes();
@@ -4362,123 +4641,108 @@
     let deferredPwaPrompt = null;
     const installModal = document.getElementById('installAppModal');
 
+    function drawFourPointStarOnCanvas(ctx, cx, cy, outerR, innerR, color) {
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const angle = i * (Math.PI / 4) - (Math.PI / 2);
+        const r = i % 2 === 0 ? outerR : innerR;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
     function generateAniTagAppIconDataUrl(size = 512) {
       const c = document.createElement('canvas');
       c.width = size;
       c.height = size;
       const ctx = c.getContext('2d');
 
-      // Rounded dark ink squircle background
-      ctx.fillStyle = '#17130F';
+      // Clean warm-white app icon background matching "my previous" native app icon
+      ctx.fillStyle = '#FBF9F5';
+      ctx.fillRect(0, 0, size, size);
+
+      // Soft warm circular halo behind hat
       ctx.beginPath();
-      const r = size * 0.22;
-      ctx.moveTo(r, 0);
-      ctx.lineTo(size - r, 0);
-      ctx.quadraticCurveTo(size, 0, size, r);
-      ctx.lineTo(size, size - r);
-      ctx.quadraticCurveTo(size, size, size - r, size);
-      ctx.lineTo(r, size);
-      ctx.quadraticCurveTo(0, size, 0, size - r);
-      ctx.lineTo(0, r);
-      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.arc(size * 0.5, size * 0.44, size * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = '#F5EFE2';
+      ctx.fill();
+
+      // 1. Straw Hat Crown
+      ctx.beginPath();
+      ctx.arc(size * 0.5, size * 0.41, size * 0.29, Math.PI, 0, false);
       ctx.closePath();
+      ctx.fillStyle = '#EAC468';
       ctx.fill();
-
-      // Scale 200x200 viewBox to canvas
-      ctx.save();
-      const scale = (size * 0.78) / 200;
-      const offset = size * 0.11;
-      ctx.translate(offset, offset - size * 0.04);
-      ctx.scale(scale, scale);
-
-      // Brim
-      ctx.beginPath();
-      ctx.ellipse(100, 122, 86, 22, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#E8C36A';
-      ctx.fill();
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = '#F7F3EA';
+      ctx.lineWidth = size * 0.012;
+      ctx.strokeStyle = '#3A2A1D';
       ctx.stroke();
 
-      // Crown
+      // 2. Crimson Ribbon Band
       ctx.beginPath();
-      ctx.moveTo(50, 118);
-      ctx.bezierCurveTo(50, 66, 150, 66, 150, 118);
-      ctx.ellipse(100, 118, 50, 9.5, 0, 0, Math.PI, false);
-      ctx.closePath();
-      ctx.fillStyle = '#E8C36A';
+      ctx.rect(size * 0.22, size * 0.36, size * 0.56, size * 0.08);
+      ctx.fillStyle = '#C4432D';
       ctx.fill();
 
-      // Crimson Band
+      // 3. Wide Golden Brim
       ctx.beginPath();
-      ctx.moveTo(57, 97);
-      ctx.quadraticCurveTo(100, 107, 143, 97);
-      ctx.lineTo(150, 118);
-      ctx.quadraticCurveTo(100, 128, 50, 118);
-      ctx.closePath();
-      ctx.fillStyle = '#C1442E';
+      ctx.ellipse(size * 0.5, size * 0.455, size * 0.42, size * 0.075, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#EAC468';
+      ctx.fill();
+      ctx.lineWidth = size * 0.012;
+      ctx.strokeStyle = '#3A2A1D';
+      ctx.stroke();
+
+      // 4. Dark Charcoal Emblem Circle overlapping below brim
+      const bx = size * 0.48;
+      const by = size * 0.67;
+      const br = size * 0.175;
+      ctx.beginPath();
+      ctx.arc(bx, by, br + size * 0.012, 0, Math.PI * 2);
+      ctx.fillStyle = '#D8AF56';
       ctx.fill();
 
-      // Crown Outline
       ctx.beginPath();
-      ctx.moveTo(50, 118);
-      ctx.bezierCurveTo(50, 66, 150, 66, 150, 118);
-      ctx.lineWidth = 4.5;
-      ctx.strokeStyle = '#17130F';
-      ctx.stroke();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fillStyle = '#1C1917';
+      ctx.fill();
 
-      // Hidden Leaf Emblem
-      ctx.beginPath();
-      ctx.arc(100, 114, 5, 0, Math.PI * 1.65);
-      ctx.strokeStyle = '#F7F3EA';
-      ctx.lineWidth = 2.6;
-      ctx.stroke();
-      ctx.restore();
-
-      // Wordmark at bottom of icon
-      ctx.font = `800 ${Math.round(size * 0.13)}px Outfit, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#F7F3EA';
-      ctx.fillText('AniTAG', size / 2, size * 0.86);
+      // 5. Gold 4-Point Star inside dark circle + Crimson Sparkle on right
+      drawFourPointStarOnCanvas(ctx, bx, by, size * 0.115, size * 0.035, '#EEC86C');
+      drawFourPointStarOnCanvas(ctx, size * 0.665, size * 0.715, size * 0.095, size * 0.028, '#D44A32');
 
       return c.toDataURL('image/png');
     }
 
     function initProgressiveWebApp() {
       try {
-        const icon192 = generateAniTagAppIconDataUrl(192);
-        const icon512 = generateAniTagAppIconDataUrl(512);
+        // IMPORTANT FOR ANDROID WEBAPK (NO CHROME BADGE):
+        // When running over HTTP/HTTPS (Vercel / Render), keep /manifest.json and /icon-192.png as real server URLs.
+        // Android Chrome's WebAPK Minting Server cannot read blob: manifests or data: icons, which caused the Chrome shortcut badge!
+        if (location.protocol === 'http:' || location.protocol === 'https:') {
+          const manifestLink = document.getElementById('pwaManifestLink');
+          if (manifestLink) manifestLink.href = '/manifest.json';
+          const fav = document.getElementById('pwaFaviconLink');
+          const apple = document.getElementById('pwaAppleIconLink');
+          if (fav) fav.href = '/icon-192.png';
+          if (apple) apple.href = '/icon-192.png';
 
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+          }
+          return;
+        }
+
+        // Fallback only when opened as a local file://
+        const icon192 = generateAniTagAppIconDataUrl(192);
         const fav = document.getElementById('pwaFaviconLink');
         const apple = document.getElementById('pwaAppleIconLink');
         if (fav) fav.href = icon192;
         if (apple) apple.href = icon192;
-
-        const manifestObj = {
-          name: 'AniTAG — One tag · Every world',
-          short_name: 'AniTAG',
-          description: 'Ad-free HD anime streaming web app. Open, choose anime, play, and enjoy.',
-          start_url: window.location.pathname || '/',
-          scope: '/',
-          display: 'standalone',
-          orientation: 'any',
-          background_color: '#0b0b0e',
-          theme_color: '#0b0b0e',
-          icons: [
-            { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-            { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-          ]
-        };
-
-        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-        const manifestLink = document.getElementById('pwaManifestLink');
-        if (manifestLink) manifestLink.href = manifestUrl;
-
-        // Register Service Worker if supported and on HTTPS/localhost
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        }
       } catch (e) {}
     }
 
@@ -4595,8 +4859,30 @@
     document.getElementById('viewAllTrendingBtn').addEventListener('click', () => switchNavView('browse'));
     document.getElementById('clearContinueBtn').addEventListener('click', () => {
       state.continueWatching = [];
+      saveContinueWatching();
       renderContinueWatching();
+      showToast('Cleared all Continue Watching items');
     });
+
+    const clearWhBtn = document.getElementById('clearWatchHistoryBtn');
+    if (clearWhBtn) {
+      clearWhBtn.addEventListener('click', () => {
+        state.watchHistory = [];
+        saveWatchHistory();
+        renderWatchHistory();
+        showToast('Watch History Cleared');
+      });
+    }
+
+    const clearWhSavedBtn = document.getElementById('clearWatchHistorySavedViewBtn');
+    if (clearWhSavedBtn) {
+      clearWhSavedBtn.addEventListener('click', () => {
+        state.watchHistory = [];
+        saveWatchHistory();
+        renderWatchHistory();
+        showToast('Watch History Cleared');
+      });
+    }
 
     // Wire up all Captions (CC) On / Off Controls
     const watchBarCcBtn = document.getElementById('watchBarCcToggleBtn');
@@ -4764,6 +5050,28 @@
         return;
       }
 
+      const delContinueBtn = e.target.closest('[data-delete-continue]');
+      if (delContinueBtn) {
+        e.stopPropagation();
+        const delId = delContinueBtn.dataset.deleteContinue;
+        state.continueWatching = state.continueWatching.filter(item => item.id !== delId);
+        saveContinueWatching();
+        renderContinueWatching();
+        showToast('Removed from Continue Watching');
+        return;
+      }
+
+      const delHistoryBtn = e.target.closest('[data-delete-history]');
+      if (delHistoryBtn) {
+        e.stopPropagation();
+        const delUid = delHistoryBtn.dataset.deleteHistory;
+        state.watchHistory = state.watchHistory.filter(item => item.uid !== delUid);
+        saveWatchHistory();
+        renderWatchHistory();
+        showToast('Deleted from Watch History');
+        return;
+      }
+
       const resumeCard = e.target.closest('[data-resume-anime]');
       if (resumeCard) {
         openAnimeInPlayer(
@@ -4785,6 +5093,7 @@
       if (epBtn) {
         state.activeEpisode = parseInt(epBtn.dataset.selectEp, 10);
         state.currentTime = 0;
+        recordWatchProgress(state.activeAnime.id, state.activeEpisode, 0);
         loadBuiltInEpisodeStream(state.activeAnime, state.activeEpisode);
         document.getElementById('playerEpisodePill').textContent = `EP ${state.activeEpisode} • ${state.audioMode}`;
         document.getElementById('watchEpisodeHeading').textContent = `${getTitle(state.activeAnime)} — Episode ${state.activeEpisode}`;

@@ -1,9 +1,17 @@
 {
   "version": 2,
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/server.js"
-    }
+    { "source": "/api/(.*)", "destination": "/server.js" },
+    { "source": "/episodes/(.*)", "destination": "/server.js" },
+    { "source": "/watch/(.*)", "destination": "/server.js" },
+    { "source": "/stream/(.*)", "destination": "/server.js" },
+    { "source": "/map/(.*)", "destination": "/server.js" },
+    { "source": "/proxy", "destination": "/server.js" },
+    { "source": "/healthz", "destination": "/server.js" },
+    { "source": "/manifest.json", "destination": "/server.js" },
+    { "source": "/sw.js", "destination": "/server.js" },
+    { "source": "/icon-192.png", "destination": "/server.js" },
+    { "source": "/icon-512.png", "destination": "/server.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

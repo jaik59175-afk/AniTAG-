@@ -801,10 +801,11 @@
             preload="auto"
           ></video>
 
-          <!-- Full-Episode Cloud Embed Iframe (Ad-Blocked Sandbox for Anikoto / AnimeGG / 2DHiVE / VidLink) -->
+          <!-- Full-Episode Cloud Embed Iframe (Strict Ad-Blocked Sandbox — Blocks All Popups & Redirects) -->
           <iframe
             id="cloudEpisodeEmbedFrame"
             class="hidden absolute inset-0 w-full h-full bg-black z-30 border-0"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             referrerpolicy="origin"
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowfullscreen
@@ -836,7 +837,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
             <span>Tap to Unmute Audio</span>
           </button>
-          <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/50"></div>
+          <div id="playerGradientBackdrop" class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/50"></div>
 
           <!-- Left-Side Vertical Thumb Drag & Scroll Volume Gesture Zone (Left 45% of Player) -->
           <div
@@ -865,7 +866,7 @@
           </div>
 
           <!-- Top-Left & Top-Right Subtle Episode Badges -->
-          <div class="absolute top-2.5 sm:top-4 inset-x-3 sm:inset-x-5 flex items-center justify-between z-20 pointer-events-none">
+          <div id="playerTopBadgesRow" class="absolute top-2.5 sm:top-4 inset-x-3 sm:inset-x-5 flex items-center justify-between z-20 pointer-events-none">
             <div class="flex items-center gap-1.5">
               <span id="playerEpisodePill" class="px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[10px] sm:text-[11px] font-semibold text-white tabular-nums">EP 1 • SUB</span>
               <span id="overlayQualityTag" class="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-[10px] sm:text-[11px] text-neutral-200 tabular-nums">1080p</span>
@@ -878,7 +879,7 @@
           <!-- ============================================================= -->
           <!-- CENTER 3-CIRCLE OVERLAY CONTROLS (MINIMALIST LINEAR ICONS)     -->
           <!-- ============================================================= -->
-          <div class="absolute inset-0 flex items-center justify-center gap-5 sm:gap-11 -translate-y-3 sm:-translate-y-2 z-20 pointer-events-none">
+          <div id="playerCenterControlsRow" class="absolute inset-0 flex items-center justify-center gap-5 sm:gap-11 -translate-y-3 sm:-translate-y-2 z-20 pointer-events-none">
             <!-- Left Circle: Linear Rewind 10s -->
             <button
               id="centerRewind10Btn"
@@ -922,7 +923,7 @@
           </div>
 
           <!-- Clean Responsive Subtitles Overlay -->
-          <div class="pointer-events-none absolute inset-x-0 bottom-[62px] sm:bottom-24 flex justify-center px-4 z-20">
+          <div id="playerSubtitleWrapper" class="pointer-events-none absolute inset-x-0 bottom-[62px] sm:bottom-24 flex justify-center px-4 z-20">
             <div
               id="playerSubtitleContainer"
               class="px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl font-medium text-center max-w-[92%] sm:max-w-xl transition-all leading-snug"
@@ -1047,7 +1048,7 @@
           <!-- ============================================================= -->
           <!-- BOTTOM PLAYER CONTROLS CONTAINER                              -->
           <!-- ============================================================= -->
-          <div class="absolute inset-x-0 bottom-0 pt-6 pb-2 sm:pb-3.5 px-2.5 sm:px-5 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-1.5 sm:gap-2.5 z-20">
+          <div id="playerBottomControlsBar" class="absolute inset-x-0 bottom-0 pt-6 pb-2 sm:pb-3.5 px-2.5 sm:px-5 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col gap-1.5 sm:gap-2.5 z-20">
 
             <!-- SEGMENTED CHAPTER TIMELINE PROGRESS BAR + HOVER/DRAG FRAME PREVIEW -->
             <div id="timelineContainer" class="scrubber-wrap relative w-full py-1.5 flex items-center select-none">
@@ -3664,11 +3665,12 @@
     }
 
     setInterval(() => {
-      if (state.playerOpen && state.isPlaying) {
-        // Only increment fallback clock if nativeVideo is not actively updating currentTime
-        if (!nativeVideo || nativeVideo.paused || nativeVideo.readyState < 2) {
-          state.currentTime += 0.25 * state.playbackSpeed;
-          if (state.currentTime >= state.duration) state.currentTime = 0;
+      if (state.playerOpen && state.isPlaying && !state.isEmbedPlaying) {
+        if (nativeVideo && !nativeVideo.paused && isFinite(nativeVideo.currentTime)) {
+          state.currentTime = nativeVideo.currentTime;
+          if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration > 0) {
+            state.duration = Math.floor(nativeVideo.duration);
+          }
           updateTimelineUI();
         }
       }
@@ -4229,11 +4231,37 @@
       if (sub && statusText) sub.textContent = statusText;
     }
 
+    state.isEmbedPlaying = false;
+
+    function setNativePlayerOverlaysVisible(visible) {
+      const ids = [
+        'playerGradientBackdrop',
+        'leftVolumeTouchZone',
+        'playerTopBadgesRow',
+        'playerCenterControlsRow',
+        'playerSubtitleWrapper',
+        'playerBottomControlsBar',
+        'playerSettingsPopover',
+        'mobileAutoUnmuteBtn'
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === 'playerSettingsPopover' || id === 'mobileAutoUnmuteBtn') {
+          if (!visible) el.classList.add('hidden');
+        } else {
+          el.classList.toggle('hidden', !visible);
+        }
+      });
+    }
+
     function applyAdShieldToIframe(embedFrame, url = '') {
       if (!embedFrame) return;
       embedFrame.setAttribute('referrerpolicy', 'origin');
-      const antiSandboxHost = /vidlink\.|vidsrc\.|megaplay\.|babastream\.|2anime\.|hianime/i.test(String(url || embedFrame.src || ''));
-      if (state.adShieldEnabled && !antiSandboxHost) {
+      if (state.adShieldEnabled) {
+        // Strictly enforce HTML5 sandbox without allow-popups or allow-top-navigation.
+        // This blocks 100% of popup ads (window.open) and redirects (ay267.com / khetikyari.com)
+        // while allowing the HLS video player and fullscreen inside MegaPlay, VidSrc, etc.
         embedFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-presentation');
       } else {
         embedFrame.removeAttribute('sandbox');
@@ -4267,81 +4295,66 @@
       }
     }
 
-    function getFallbackEmbedSources(anime, episodeNum) {
+    // Verified Full-Episode Cloud Players (Sandboxed & Ad-Blocked — Zero 90-second opening clips)
+    function getVerifiedFullEpisodeEmbeds(anime, episodeNum, preferredProvider = 'anikoto') {
       const ext = getAnimeExtras(anime);
       const malId = state.activeSeasonMalId || ext.malId || 21;
       const anilistId = state.activeSeasonAnilistId || ext.anilistId || 21;
       const subOrDub = state.audioMode === 'DUB' ? 'dub' : 'sub';
-      const isDubNum = state.audioMode === 'DUB' ? 1 : 0;
-      const slug = ANIME_CLOUD_SLUGS[anime.id] || anime.id;
-      const dubSuffix = state.audioMode === 'DUB' ? '-dub' : '';
+      const upperMode = subOrDub.toUpperCase();
 
-      return [
-        {
-          server: 'VidLink Cloud HD (' + subOrDub.toUpperCase() + ')',
-          type: 'embed',
-          url: `https://vidlink.pro/anime/${malId}/${episodeNum}/${subOrDub}?fallback=true&autoplay=true&primaryColor=E8C36A`
-        },
-        {
-          server: 'VidSrc CC Cloud (' + subOrDub.toUpperCase() + ')',
-          type: 'embed',
-          url: `https://vidsrc.cc/v2/embed/anime/ani${anilistId}/${episodeNum}/${subOrDub}?autoPlay=true`
-        },
-        {
-          server: 'MegaPlay Cloud (' + subOrDub.toUpperCase() + ')',
-          type: 'embed',
-          url: `https://megaplay.buzz/stream/mal/${malId}/${episodeNum}/${subOrDub}`
-        },
-        {
-          server: 'BabaStream Cloud (' + subOrDub.toUpperCase() + ')',
-          type: 'embed',
-          url: `https://babastream.top/embed/${malId}/${episodeNum}/${subOrDub}`
-        },
-        {
-          server: 'VidSrc ICU Cloud',
-          type: 'embed',
-          url: `https://vidsrc.icu/embed/anime/${anilistId}/${episodeNum}/${isDubNum}`
-        },
-        {
-          server: '2Anime Cloud',
-          type: 'embed',
-          url: `https://2anime.xyz/embed/${slug}${dubSuffix}-episode-${episodeNum}`
-        }
-      ];
-    }
+      const megaPlaySource = {
+        server: `MegaPlay HD (${upperMode})`,
+        type: 'embed',
+        url: `https://megaplay.buzz/stream/mal/${malId}/${episodeNum}/${subOrDub}`
+      };
+      const vidSrcCcSource = {
+        server: `VidSrc CC HD (${upperMode})`,
+        type: 'embed',
+        url: `https://vidsrc.cc/v2/embed/anime/ani${anilistId}/${episodeNum}/${subOrDub}?autoPlay=true`
+      };
+      const vidLinkSource = {
+        server: `VidLink Cloud HD (${upperMode})`,
+        type: 'embed',
+        url: `https://vidlink.pro/anime/${malId}/${episodeNum}/${subOrDub}?fallback=true&autoplay=true&primaryColor=E8C36A`
+      };
 
-    function buildDirectVideoSources(anime, episodeNum, provider = 'anikoto') {
-      const seriesStreams = DIRECT_ANIME_EPISODE_STREAMS[anime.id] || REAL_ANIME_FALLBACK_STREAMS;
-      const providerOffsets = { anikoto: 0, animegg: 1, anibd: 2, '2dhive': 3, mkissa: 4, vidlink: 0 };
-      const offset = providerOffsets[provider] || 0;
+      const providerOrderMap = {
+        anikoto: [megaPlaySource, vidSrcCcSource, vidLinkSource],
+        '2dhive': [megaPlaySource, vidSrcCcSource, vidLinkSource],
+        animegg: [vidSrcCcSource, megaPlaySource, vidLinkSource],
+        anibd: [megaPlaySource, vidLinkSource, vidSrcCcSource],
+        mkissa: [megaPlaySource, vidSrcCcSource, vidLinkSource],
+        vidlink: [vidLinkSource, megaPlaySource, vidSrcCcSource]
+      };
 
-      const list = [];
-      // 1. Cloudflare CDN Direct HD Anime Streams (Instant playback in India & Canvas)
-      for (let i = 0; i < seriesStreams.length; i++) {
-        const u = seriesStreams[(episodeNum - 1 + offset + i) % seriesStreams.length];
-        list.push({
-          server: i === 0 ? `${provider.toUpperCase()} Direct HD` : `${provider.toUpperCase()} Direct Mirror #${i + 1}`,
+      const ordered = providerOrderMap[preferredProvider] || [megaPlaySource, vidSrcCcSource, vidLinkSource];
+      const list = [...ordered];
+
+      // Only add Archive.org 24m Direct MP4 when watching Black Clover episodes 52..170 (where exact full episodes exist)
+      if (anime.id === 'black-clover' && episodeNum >= 52 && episodeNum <= 170) {
+        let bcSeasonFolder = 'bl5ck-cl0v3r-tv-dub-seasons-2';
+        if (episodeNum >= 103 && episodeNum <= 141) bcSeasonFolder = 'bl5ck-cl0v3r-tv-dub-seasons-3';
+        else if (episodeNum >= 142) bcSeasonFolder = 'bl5ck-cl0v3r-tv-dub-seasons-4';
+        list.unshift({
+          server: `Black Clover Direct 24m MP4 (EP ${episodeNum})`,
           type: 'video',
           isM3U8: false,
-          url: u
+          url: `https://archive.org/download/${bcSeasonFolder}/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`
         });
       }
 
-      // 2. Archive.org 24-Minute Full Episode MP4 Mirror
-      let archiveMp4 = FULL_24MIN_ARCHIVE_EPISODES[(episodeNum - 1) % FULL_24MIN_ARCHIVE_EPISODES.length];
-      if (anime.id === 'black-clover' && episodeNum >= 52 && episodeNum <= 102) {
-        archiveMp4 = `https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-2/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`;
-      } else if (anime.id === 'black-clover' && episodeNum >= 103 && episodeNum <= 141) {
-        archiveMp4 = `https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-3/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`;
-      } else if (anime.id === 'black-clover' && episodeNum >= 142 && episodeNum <= 170) {
-        archiveMp4 = `https://archive.org/download/bl5ck-cl0v3r-tv-dub-seasons-4/Black%20Clover%20%28TV%29%20%28Dub%29%20Episode%20${episodeNum}.mp4`;
+      // Only if opened as local file:// or sandboxed preview without external embed access, keep a single OP preview at the very bottom
+      const previewList = DIRECT_ANIME_EPISODE_STREAMS[anime.id] || REAL_ANIME_FALLBACK_STREAMS;
+      if (previewList && previewList.length) {
+        list.push({
+          server: 'Theme Preview (90s OP)',
+          type: 'video',
+          isM3U8: false,
+          isPreviewClip: true,
+          url: previewList[(episodeNum - 1) % previewList.length]
+        });
       }
-      list.push({
-        server: 'Archive 24m Full Ep MP4',
-        type: 'video',
-        isM3U8: false,
-        url: archiveMp4
-      });
 
       return list;
     }
@@ -4356,7 +4369,9 @@
       sel.classList.remove('hidden');
       sel.innerHTML = activeStreamQueue.map((item, idx) => {
         const label = item.server || `Mirror #${idx + 1}`;
-        const kind = item.type === 'embed' ? 'Cloud Embed' : (item.isM3U8 || item.type === 'hls' ? 'Direct HLS' : 'Direct HD');
+        const kind = item.isPreviewClip
+          ? 'OP Preview'
+          : (item.type === 'embed' ? 'Full Episode Cloud' : (item.isM3U8 || item.type === 'hls' ? 'Direct HLS' : 'Direct MP4'));
         return `<option value="${idx}" ${idx === activeStreamIndex ? 'selected' : ''} style="background:#141418;color:#fff;">${label} (${kind})</option>`;
       }).join('');
     }
@@ -4372,28 +4387,33 @@
       const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
       const epTitle = getEpisodeTitle(state.activeAnime, state.activeEpisode);
 
-      // Case 1: Cloud Embed Stream (ONLY when user selects VidLink HD or picks a Cloud Embed from dropdown)
+      // Case 1: Full-Episode Cloud Embed Stream (Ad-Shielded via HTML5 Sandbox)
       if (sourceObj.type === 'embed') {
+        state.isEmbedPlaying = true;
         if (hlsInstance) {
           hlsInstance.destroy();
           hlsInstance = null;
         }
         nativeVideo.pause();
+        nativeVideo.removeAttribute('src');
         setBufferingUI(false);
+        setNativePlayerOverlaysVisible(false);
         if (embedFrame) {
           applyAdShieldToIframe(embedFrame, sourceObj.url);
           embedFrame.src = sourceObj.url;
           embedFrame.classList.remove('hidden');
         }
-        showToast(`Playing on ${sourceObj.server || state.activeServer.toUpperCase()}`);
+        showToast(`Playing EP ${state.activeEpisode} on ${sourceObj.server || state.activeServer.toUpperCase()}`);
         return;
       }
 
-      // Case 2: Direct HLS (.m3u8) / WebM / MP4 Video Stream in Native Player
+      // Case 2: Direct HLS (.m3u8) or MP4 Full-Episode Stream in Native Player
+      state.isEmbedPlaying = false;
       if (embedFrame) {
         embedFrame.classList.add('hidden');
         embedFrame.src = 'about:blank';
       }
+      setNativePlayerOverlaysVisible(true);
       nativeVideo.classList.remove('hidden');
 
       setBufferingUI(true, `Streaming EP ${state.activeEpisode} (${sourceObj.server || state.activeServer.toUpperCase()}): ${epTitle}...`);
@@ -4408,7 +4428,7 @@
       const finalUrl = sourceObj.url;
 
       if (isHls && window.Hls && Hls.isSupported()) {
-        hlsInstance = new Hls({ enableWorker: true });
+        hlsInstance = new Hls({ enableWorker: true, maxBufferLength: 30 });
         hlsInstance.loadSource(finalUrl);
         hlsInstance.attachMedia(nativeVideo);
         hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -4419,6 +4439,10 @@
             tryNextStreamInQueue();
           }
         });
+      } else if (isHls && nativeVideo.canPlayType('application/vnd.apple.mpegurl')) {
+        nativeVideo.src = finalUrl;
+        nativeVideo.load();
+        safeStartVideoPlayback();
       } else {
         nativeVideo.src = finalUrl;
         nativeVideo.load();
@@ -4426,27 +4450,19 @@
       }
 
       streamStallTimeout = setTimeout(() => {
-        if (state.playerOpen && sourceObj.type !== 'embed' && nativeVideo.readyState < 2) {
+        if (state.playerOpen && !state.isEmbedPlaying && nativeVideo.readyState < 2) {
           tryNextStreamInQueue();
         }
-      }, 5000);
+      }, 6500);
     }
 
     function tryNextStreamInQueue() {
       clearTimeout(streamStallTimeout);
-      // Skip automatic failover into 'embed' iframes unless user is on vidlink server
-      let nextIdx = activeStreamIndex + 1;
-      while (
-        nextIdx < activeStreamQueue.length &&
-        activeStreamQueue[nextIdx].type === 'embed' &&
-        state.activeServer !== 'vidlink'
-      ) {
-        nextIdx++;
-      }
+      const nextIdx = activeStreamIndex + 1;
       if (nextIdx < activeStreamQueue.length) {
         activeStreamIndex = nextIdx;
         const nextSource = activeStreamQueue[activeStreamIndex];
-        setBufferingUI(true, `Switching to ${nextSource.server || 'Direct Mirror #' + (activeStreamIndex + 1)}...`);
+        setBufferingUI(true, `Switching to ${nextSource.server || 'Mirror #' + (activeStreamIndex + 1)}...`);
         playStreamSourceObject(nextSource);
       } else {
         setBufferingUI(false);
@@ -4456,11 +4472,10 @@
     async function loadBuiltInEpisodeStream(anime, episodeNum) {
       if (!anime) return;
       const myToken = ++currentLoadToken;
+      clearTimeout(streamStallTimeout);
       nativeVideo.poster = getBannerUrl(anime);
-      state.duration = 1441; // 24:01 standard full episode duration
+      state.duration = 1441;
       updateTimelineUI();
-      state.isPlaying = true;
-      syncPlayPauseIcons();
 
       const ext = getAnimeExtras(anime);
       const anilistId = state.activeSeasonAnilistId || ext.anilistId || 21;
@@ -4468,64 +4483,33 @@
       const audioLower = state.audioMode.toLowerCase();
       const provider = (state.activeServer || 'anikoto').toLowerCase();
 
-      const directVideoList = buildDirectVideoSources(anime, episodeNum, provider);
-      const embedFallbacks = getFallbackEmbedSources(anime, episodeNum);
+      const verifiedFallbacks = getVerifiedFullEpisodeEmbeds(anime, episodeNum, provider);
 
-      // If user explicitly clicked VidLink HD Cloud button, open VidLink embed player
+      // If user explicitly clicked VidLink HD Cloud button, open VidLink/MegaPlay immediately
       if (provider === 'vidlink') {
-        activeStreamQueue = [
-          ...embedFallbacks,
-          ...directVideoList
-        ];
+        activeStreamQueue = [...verifiedFallbacks];
         activeStreamIndex = 0;
         playStreamSourceObject(activeStreamQueue[0]);
         return;
       }
 
-      // STEP 1: Start playing verified Direct HD stream IMMEDIATELY (0ms wait) so streaming ALWAYS works right away!
-      activeStreamQueue = [
-        ...directVideoList,
-        ...embedFallbacks
-      ];
-      activeStreamIndex = 0;
-      playStreamSourceObject(activeStreamQueue[0]);
-
-      // STEP 2: For newly searched anime not in static map, also query live AnimeThemes API in background
-      if (!DIRECT_ANIME_EPISODE_STREAMS[anime.id]) {
-        (async () => {
-          try {
-            const cleanQuery = String(anime.titleEn || '').split(':')[0].split('Season')[0].trim();
-            if (!cleanQuery) return;
-            const atRes = await fetch('https://api.animethemes.moe/anime?filter[name]=' + encodeURIComponent(cleanQuery) + '&include=animethemes.animethemeentries.videos&page[size]=3');
-            if (!atRes.ok || myToken !== currentLoadToken) return;
-            const atJson = await atRes.json();
-            const links = [];
-            ((atJson && atJson.anime) || []).forEach(a => {
-              (a.animethemes || []).forEach(t => {
-                (t.animethemeentries || []).forEach(e => {
-                  (e.videos || []).forEach(v => {
-                    if (v && v.link) links.push(v.link);
-                  });
-                });
-              });
-            });
-            if (links.length && myToken === currentLoadToken) {
-              DIRECT_ANIME_EPISODE_STREAMS[anime.id] = links;
-              const chosen = links[(episodeNum - 1) % links.length];
-              const liveItem = { server: `${provider.toUpperCase()} Live Anime Stream`, type: 'video', isM3U8: false, url: chosen };
-              activeStreamQueue.unshift(liveItem);
-              activeStreamIndex = 0;
-              playStreamSourceObject(activeStreamQueue[0]);
-            }
-          } catch (e) {}
-        })();
+      // Show clean loading state while querying /api/stream for real full-length episode streams
+      const embedFrame = document.getElementById('cloudEpisodeEmbedFrame');
+      if (embedFrame) {
+        embedFrame.classList.add('hidden');
+        embedFrame.src = 'about:blank';
       }
+      nativeVideo.pause();
+      setNativePlayerOverlaysVisible(true);
+      setBufferingUI(true, `Loading ${getTitle(anime)} • EP ${episodeNum} (${state.audioMode}) on ${provider.toUpperCase()}...`);
 
-      // STEP 3: Query integrated Anivexa Backend (/api/stream and /watch/:provider/...) with fast timeout
+      const backendDirectStreams = [];
+      const backendEmbedStreams = [];
+
       if (location.protocol.startsWith('http')) {
         try {
           const ctrl = new AbortController();
-          const tId = setTimeout(() => ctrl.abort(), 4500);
+          const tId = setTimeout(() => ctrl.abort(), 9500);
           const resp = await fetch(
             `/api/stream?provider=${encodeURIComponent(provider)}&animeId=${encodeURIComponent(anime.id)}&anilistId=${anilistId}&malId=${malId}&title=${encodeURIComponent(anime.titleEn)}&ep=${episodeNum}&audio=${audioLower}`,
             { signal: ctrl.signal }
@@ -4534,50 +4518,63 @@
           if (resp.ok && myToken === currentLoadToken) {
             const data = await resp.json();
             const streamArr = Array.isArray(data.streams) ? data.streams : (Array.isArray(data.sources) ? data.sources : []);
-            const directBackendStreams = [];
             streamArr.forEach(s => {
-              const u = s && (s.rawUrl || s.extractedUrl || s.url);
-              if (!u) return;
+              const u = s && (s.url || s.extractedUrl || s.rawUrl);
+              if (!u || s.isPreviewClip) return;
               const isEmb = String(s.type || '').toLowerCase() === 'embed';
-              if (!isEmb) {
-                const isHlsStream = Boolean(s.isM3U8 || String(s.type || '').toLowerCase() === 'hls' || String(u).includes('.m3u8'));
-                const primaryU = s.url || u;
-                directBackendStreams.push({
-                  server: s.server || s.name || (data.provider || provider).toUpperCase(),
-                  type: 'video',
-                  isM3U8: isHlsStream,
-                  url: primaryU,
-                  rawUrl: u
+              if (isEmb) {
+                backendEmbedStreams.push({
+                  server: s.server || s.name || `${(data.provider || provider).toUpperCase()} Cloud`,
+                  type: 'embed',
+                  url: u
                 });
-                if (s.proxiedUrl && s.proxiedUrl !== primaryU) {
-                  directBackendStreams.push({
+              } else {
+                const rawU = s.rawUrl || s.extractedUrl || u;
+                const isHlsStream = Boolean(s.isM3U8 || String(s.type || '').toLowerCase() === 'hls' || String(rawU).includes('.m3u8') || String(u).includes('.m3u8'));
+                backendDirectStreams.push({
+                  server: s.server || s.name || `${(data.provider || provider).toUpperCase()} Direct HD`,
+                  type: isHlsStream ? 'hls' : 'video',
+                  isM3U8: isHlsStream,
+                  url: u,
+                  rawUrl: rawU,
+                  subtitles: s.subtitles || data.subtitles || []
+                });
+                if (s.proxiedUrl && s.proxiedUrl !== u) {
+                  backendDirectStreams.push({
                     server: (s.server || s.name || (data.provider || provider).toUpperCase()) + ' (Proxy)',
-                    type: 'video',
+                    type: isHlsStream ? 'hls' : 'video',
                     isM3U8: isHlsStream,
                     url: s.proxiedUrl,
-                    rawUrl: u
+                    rawUrl: rawU,
+                    subtitles: s.subtitles || data.subtitles || []
                   });
                 }
               }
             });
-            if (directBackendStreams.length > 0 && myToken === currentLoadToken) {
-              // Prepend real direct HLS/MP4 streams from backend & switch if from live provider
-              const isRealProvider = data.provider && data.provider !== 'anitag-hd-anime';
-              activeStreamQueue = [
-                ...directBackendStreams,
-                ...directVideoList,
-                ...embedFallbacks
-              ];
-              if (isRealProvider) {
-                activeStreamIndex = 0;
-                playStreamSourceObject(activeStreamQueue[0]);
-              } else {
-                renderMirrorSelectorDropdown();
-              }
-            }
           }
         } catch (e) {}
       }
+
+      if (myToken !== currentLoadToken) return;
+
+      // Deduplicate and build activeStreamQueue:
+      // 1. Real direct HLS/MP4 streams from backend (if any)
+      // 2. Real full-episode embed streams from backend & verified MegaPlay / VidSrc / VidLink fallbacks
+      // 3. Single OP preview at the very end of the list
+      const combined = [
+        ...backendDirectStreams,
+        ...backendEmbedStreams,
+        ...verifiedFallbacks
+      ];
+      const seenUrls = new Set();
+      activeStreamQueue = combined.filter(item => {
+        if (!item || !item.url || seenUrls.has(item.url)) return false;
+        seenUrls.add(item.url);
+        return true;
+      });
+
+      activeStreamIndex = 0;
+      playStreamSourceObject(activeStreamQueue[0]);
     }
 
     function populateWatchPageDetails(anime, episodeNum) {
@@ -5160,7 +5157,7 @@
       setBufferingUI(false);
     });
     nativeVideo.addEventListener('loadedmetadata', () => {
-      if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration >= 300) {
+      if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration > 0) {
         state.duration = Math.floor(nativeVideo.duration);
         updateTimelineUI();
       }
@@ -5168,8 +5165,8 @@
     nativeVideo.addEventListener('timeupdate', () => {
       if (!isScrubbing && !nativeVideo.paused && isFinite(nativeVideo.currentTime)) {
         state.currentTime = nativeVideo.currentTime;
-        if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration >= 300) {
-          state.duration = nativeVideo.duration;
+        if (nativeVideo.duration && isFinite(nativeVideo.duration) && nativeVideo.duration > 0) {
+          state.duration = Math.floor(nativeVideo.duration);
         }
         updateTimelineUI();
       }

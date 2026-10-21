@@ -1,0 +1,12 @@
+{
+  "name": "anitag-streaming-app",
+  "version": "3.0.0",
+  "description": "AniTAG \u2014 Ad-Free HD Anime Streaming App (True Android WebAPK + Vercel & Render)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
